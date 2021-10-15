@@ -7,3 +7,5 @@ Projet pour la matière MAOA (Modèles et Applications en Ordonnancement et opti
 - LightGraphs
 - SimpleWeightedGraphs
 - OffsetArrays
+- JuMP
+- GLPK
