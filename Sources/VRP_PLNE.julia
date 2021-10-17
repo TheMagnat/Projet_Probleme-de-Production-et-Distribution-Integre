@@ -1,0 +1,44 @@
+#Fichier qui permet de créer les différents PLNE pour le problème du VRP
+
+using JuMP, CPLEX
+
+function createVRP_MTZ(params, nodes, demands,cout,m,Q)
+    #=
+    m = nb de véhicule
+    Q = capacité d'un véhicule
+    =#
+    mtz_model = Model(CPLEX.Optimizer)
+    n=size(nodes)
+
+    ####################VARIABLES#######################
+    #Variable binaire x_(i,j) pour chaque arête
+    @variable(mtz_model,x[i=0:n,j=0:n],binary=true)
+    for i in 0:n #on enlève les arêtes en trop (les (i,i))
+        delete(model,x[i,i])
+    end
+    #Variables w_i
+    @variable(mtz_model,0<=w[i=1:n]<=Q)
+    
+    ####################CONTRAINTES####################
+    #contrainte 6
+    @constraint(mtz_model,sum(x[0][j] for j in 1:n)<=m)
+    #contrainte 7
+    @constraint(mtz_model,sum(x[i][0] for i in 1:n)<=m)
+    #contraintes 8 et 9
+    for i in 1:n
+        nodesIndexWithoutI=filter(e->e!=i,1:n)
+        @constraint(mtz_model,sum(x[i,j] for j in nodesIndexWithoutI)==1)
+        @constraint(mtz_model,sum(x[j,i] for j in nodesIndexWithoutI)==1)
+    end
+    #contrainte 10
+    for i in 1:n
+        nodesIndexWithoutI=filter(e->e!=i,1:n)
+        for j in nodesIndexWithoutI
+            @constraint(mtz_model,w[i]-w[j]>=demands[i]-(Q+demands[i])(1-x[i,j]))
+        end
+    end
+
+    ####################FONCTION OBJECTIF####################
+    @objective(mtz_model,Min,sum(coutArete*x[arete[0],arete[1]] for (arete,coutArete) in cout))
+
+    return mtz_model

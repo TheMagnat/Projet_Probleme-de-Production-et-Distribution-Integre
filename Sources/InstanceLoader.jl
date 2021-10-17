@@ -123,6 +123,8 @@ function readPRP(filename)
 				xj=nodes[j]["x"]
 				yj=nodes[j]["y"]
 				coutEntreDeuxNoeuds[(i,j)]=floor(1/2+sqrt((xi-xj)^2+(yi-yj)^2))
+			end
+		end
 	if type == 2
 		for i in 1:size(nodes)-1
 			for j in i+1:size(nodes)
@@ -131,6 +133,8 @@ function readPRP(filename)
 				xj=nodes[j]["x"]
 				yj=nodes[j]["y"]
 				coutEntreDeuxNoeuds[(i,j)]=mc*sqrt((xi-xj)^2+(yi-yj)^2)
+			end
+		end
 
 
 

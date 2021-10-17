@@ -9,7 +9,7 @@ const UNBOUNDED = JuMP.MathOptInterface.DUAL_INFEASIBLE
 
 
 
-function createLspPlne(params, nodes, demands)
+function createLspPlne(params, nodes, demands,cout)
 
 	model = Model(GLPK.Optimizer)
 
