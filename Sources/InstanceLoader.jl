@@ -33,7 +33,7 @@ function readPRP(filename)
 		??? C = Capacité de production max du fournisseur ???
 		
 
-		??? k = Nombre de véhicule de transports disponible ???
+		??? k = Nombre de véhicule de transports disponible ??? ou nombre de tournées
 		Q = Capacité maximale d'un véhicule de transport
 	=#
 	params = Dict("type" => type, "n" => n, "l" => l, "u" => u, "f" => f, "C" => C, "Q" => Q, "k" => k)
@@ -45,6 +45,7 @@ function readPRP(filename)
 		mc = parse(Int, split(allLines[9], " ")[2])
 
 		#Qu'es ce que le type 2 (B) et c'est quoi ce "mc" en plus ?
+		#Les coûts sont calculés selon une formule, sur les instances de type 2, le calcul est pondérée par ce mc
 		params["mc"] = mc
 
 		nextIndex += 1
@@ -57,8 +58,9 @@ function readPRP(filename)
 		L0 = Capacité de stockage initiale
 		
 		??? 2 première valeur x et y ?  ???
+		--> oui, ce sont les coordonnées sur la "carte" des revendeurs et du fournisseur
 	=#
-	nodes = Vector{Dict}()
+	nodes = Vector{Dict}() #élement à l'indice i = noeud n°i
 
 	for line in allLines[nextIndex:nextIndex+n]
 		
@@ -71,9 +73,17 @@ function readPRP(filename)
 		newNode["x"] = Int(parse(Float64, allElems[2]))
 		newNode["y"] = Int(parse(Float64, allElems[3]))
 
-		for i in filter(x -> x%2 == 1, eachindex(allElems[5:end])) .+ 4
+		#tous les éléments d'indice impair de la ligne line en commençant par l'élément d'indice 5
+		#isodd built in function that tests if x is odd
+		for i in filter(isodd, eachindex(allElems[5:end])) .+ 4 #[5,7,9]
 			newNode[allElems[i]] = Int(parse(Float64, allElems[i+1]))
 		end
+		#=
+		Equivalent à :
+			newNode[5]=Int(parse(Float64, allElems[6])) #h
+			newNode[7]]=Int(parse(Float64, allElems[7])) #L
+			newNode[9]=Int(parse(Float64, allElems[8])) #L0
+		=#
 
 		push!(nodes, newNode)
 
@@ -85,7 +95,7 @@ function readPRP(filename)
 	d_it:
 		Demandes des revendeurs i au temps t.
 	=#
-	demands = Vector{Array}()
+	demands = Vector{Array}() #élement à l'indice i = demande du revendeur n°i
 
 	for line in allLines[nextIndex:nextIndex+n-1]
 
@@ -93,7 +103,7 @@ function readPRP(filename)
 
 		for elem in split(line, " ")[2:end]
 
-			if cmp("", elem) == 0
+			if cmp("", elem) == 0 # pourquoi tu testes si l'élément n'est pas un string vide?
 				continue
 			end
 
@@ -104,8 +114,28 @@ function readPRP(filename)
 
 	end
 
+	coutEntreDeuxNoeuds=Dict{(Int,Int),Float64}()
+	if type == 1
+		for i in 1:size(nodes)-1
+			for j in i+1:size(nodes)
+				xi=nodes[i]["x"]
+				yi=nodes[i]["y"]
+				xj=nodes[j]["x"]
+				yj=nodes[j]["y"]
+				coutEntreDeuxNoeuds[(i,j)]=floor(1/2+sqrt((xi-xj)^2+(yi-yj)^2))
+	if type == 2
+		for i in 1:size(nodes)-1
+			for j in i+1:size(nodes)
+				xi=nodes[i]["x"]
+				yi=nodes[i]["y"]
+				xj=nodes[j]["x"]
+				yj=nodes[j]["y"]
+				coutEntreDeuxNoeuds[(i,j)]=mc*sqrt((xi-xj)^2+(yi-yj)^2)
+
+
+
 	#0 based index nodes, more coherent with the project
-	return params, OffsetVector(nodes, 0:(size(nodes)[1] - 1)), demands
+	return params, OffsetVector(nodes, 0:(size(nodes)[1] - 1)), demands,coutEntreDeuxNoeuds
 
 	#1 based index nodes
 	#return params, nodes, demands
