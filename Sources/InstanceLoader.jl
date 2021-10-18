@@ -57,8 +57,7 @@ function readPRP(filename)
 		L = Capacité de stockage max
 		L0 = Capacité de stockage initiale
 		
-		??? 2 première valeur x et y ?  ???
-		--> oui, ce sont les coordonnées sur la "carte" des revendeurs et du fournisseur
+		x et y (2 premières valeurs) = Coordonnées sur la "carte" des revendeurs et du fournisseur
 	=#
 	nodes = Vector{Dict}() #élement à l'indice i = noeud n°i
 
@@ -73,21 +72,23 @@ function readPRP(filename)
 		newNode["x"] = Int(parse(Float64, allElems[2]))
 		newNode["y"] = Int(parse(Float64, allElems[3]))
 
-		#tous les éléments d'indice impair de la ligne line en commençant par l'élément d'indice 5
-		#isodd built in function that tests if x is odd
-		for i in filter(isodd, eachindex(allElems[5:end])) .+ 4 #[5,7,9]
+		#Tous les éléments d'indice impair de la ligne line en commençant par l'élément d'indice 5
+		for i in filter(isodd, eachindex(allElems[5:end])) .+ 4 #[5, 7, 9]
 			newNode[allElems[i]] = Int(parse(Float64, allElems[i+1]))
 		end
 		#=
 		Equivalent à :
-			newNode[5]=Int(parse(Float64, allElems[6])) #h
-			newNode[7]]=Int(parse(Float64, allElems[7])) #L
-			newNode[9]=Int(parse(Float64, allElems[8])) #L0
+			newNode["h"]=Int(parse(Float64, allElems[6])) #h
+			newNode["L"]]=Int(parse(Float64, allElems[7])) #L
+			newNode["L0"]=Int(parse(Float64, allElems[8])) #L0
 		=#
 
 		push!(nodes, newNode)
 
 	end
+
+	#0 based index nodes, more coherent with the project
+	nodes = OffsetVector(nodes, 0:(size(nodes)[1] - 1))
 
 	nextIndex = nextIndex+n+2
 
@@ -95,54 +96,63 @@ function readPRP(filename)
 	d_it:
 		Demandes des revendeurs i au temps t.
 	=#
-	demands = Vector{Array}() #élement à l'indice i = demande du revendeur n°i
+	demands = Array{Int, 2}(undef, n, l)#élement à l'indice i = demande du revendeur n°i
 
-	for line in allLines[nextIndex:nextIndex+n-1]
+	for (i, line) in enumerate(allLines[nextIndex:nextIndex+n-1])
 
 		cost = Vector{Int}()
 
 		for elem in split(line, " ")[2:end]
 
-			if cmp("", elem) == 0 # pourquoi tu testes si l'élément n'est pas un string vide?
+			#Pour eviter une erreur avec les fins de lignes
+			if cmp("", elem) == 0
 				continue
 			end
 
 			push!(cost, Int(parse(Float64, elem)) )
 		end
 
-		push!(demands, cost)
+		
+		demands[i, 1:end] = cost
 
 	end
 
-	coutEntreDeuxNoeuds=Dict{(Int,Int),Float64}()
+	#=
+	c_ij:
+		Cout de transport du noeud i vers le noeud j
+		(exemple: transportFee[(1, 2)] -> Cout du noeud 1 vers le 2)
+	=#
+	transportFee = Dict{Tuple{Int, Int}, Float64}()
+
+	#Le type determine la fonction cout
 	if type == 1
-		for i in 1:size(nodes)-1
-			for j in i+1:size(nodes)
-				xi=nodes[i]["x"]
-				yi=nodes[i]["y"]
-				xj=nodes[j]["x"]
-				yj=nodes[j]["y"]
-				coutEntreDeuxNoeuds[(i,j)]=floor(1/2+sqrt((xi-xj)^2+(yi-yj)^2))
-			end
+		costFunc = (x1, y1, x2, y2) -> floor(1/2 + sqrt( (x1 - x2)^2 + (y1 - y2)^2 ))
+	elseif type == 2
+		costFunc = (x1, y1, x2, y2) -> mc * sqrt( (x1 - x2)^2 + (y1 - y2)^2 )
+	end
+
+
+	for i in 0:(n - 1)
+		for j in (i + 1):n
+
+			xi=nodes[i]["x"]
+			yi=nodes[i]["y"]
+			xj=nodes[j]["x"]
+			yj=nodes[j]["y"]
+			transportFee[(i, j)] = costFunc(xi, yi, xj, yj)
+
+			#Peut servir ?
+			transportFee[(j, i)] = transportFee[(i,j)]
+
 		end
-	if type == 2
-		for i in 1:size(nodes)-1
-			for j in i+1:size(nodes)
-				xi=nodes[i]["x"]
-				yi=nodes[i]["y"]
-				xj=nodes[j]["x"]
-				yj=nodes[j]["y"]
-				coutEntreDeuxNoeuds[(i,j)]=mc*sqrt((xi-xj)^2+(yi-yj)^2)
-			end
-		end
+	end
 
 
 
-	#0 based index nodes, more coherent with the project
-	return params, OffsetVector(nodes, 0:(size(nodes)[1] - 1)), demands,coutEntreDeuxNoeuds
 
-	#1 based index nodes
-	#return params, nodes, demands
+	
+	return params, nodes, demands, transportFee
+	
 
 end
 
@@ -167,9 +177,11 @@ end
 
 
 #Exemple A
-#params, nodes, demands = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
+#params, nodes, demands, fees = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
 
 #println(nodes[0])
+
+#println(fees)
 
 #Exemple B
 #readPRP("../PRP_instances/B_200_instance20.prp")

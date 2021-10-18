@@ -9,7 +9,7 @@ const UNBOUNDED = JuMP.MathOptInterface.DUAL_INFEASIBLE
 
 
 
-function createLspPlne(params, nodes, demands,cout)
+function createLspPlne(params, nodes, demands, costs)
 
 	model = Model(GLPK.Optimizer)
 
@@ -75,9 +75,9 @@ end
 
 
 ###Exemple
-params, nodes, demands = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
+#params, nodes, demands, costs = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
 
-model = createLspPlne(params, nodes, demands)
+#model = createLspPlne(params, nodes, demands, costs)
 
 ###TODO: Creer la fonction de résolution
 #reseolvePlne(model)
