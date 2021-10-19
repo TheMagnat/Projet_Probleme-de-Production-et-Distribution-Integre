@@ -1,12 +1,8 @@
 using JuMP
 using GLPK
 
+#For exemples
 include("InstanceLoader.jl")
-
-const OPTIMAL = JuMP.MathOptInterface.OPTIMAL
-const INFEASIBLE = JuMP.MathOptInterface.INFEASIBLE
-const UNBOUNDED = JuMP.MathOptInterface.DUAL_INFEASIBLE
-
 
 
 function createLspPlne(params, nodes, demands, costs)
@@ -62,13 +58,7 @@ function createLspPlne(params, nodes, demands, costs)
 	###Contraintes
 	###TODO: Contraintes
 	
-
-
-
-
-	#Affichage du programme linéaire
-	println(model)
-
+	
 	return model
 
 end
