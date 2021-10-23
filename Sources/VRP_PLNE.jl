@@ -1,11 +1,11 @@
 #Fichier qui permet de créer les différents PLNE pour le problème du VRP
 
-using JuMP, GLPK#CPLEX
+using JuMP, CPLEX#GLPK#CPLEX
 
 function createVRP_MTZ(params, nodes, demands, costs, t)
 
-    #model = Model(CPLEX.Optimizer)
-    model = Model(GLPK.Optimizer)
+    model = Model(CPLEX.Optimizer)
+    #model = Model(GLPK.Optimizer)
 
     #=
 

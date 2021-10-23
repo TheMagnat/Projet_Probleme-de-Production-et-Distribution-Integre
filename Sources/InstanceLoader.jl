@@ -30,7 +30,7 @@ function readPRP(filename)
 
 		u = Cout par unité produite
 
-		??? C = Capacité de production max du fournisseur ???
+		C = Capacité de production max du fournisseur ??? --> oui c'est M_t dans le PL du LSP, dans la contrainte p_t≤M_ty_t> quand y_t=1 on peut produire au max M_t=C 
 		
 
 		??? k = Nombre de véhicule de transports disponible ??? ou nombre de tournées
@@ -96,7 +96,7 @@ function readPRP(filename)
 	d_it:
 		Demandes des revendeurs i au temps t.
 	=#
-	demands = Array{Int, 2}(undef, n, l)#élement à l'indice i = demande du revendeur n°i
+	demands = Array{Int, 2}(undef, n, l)#élement à l'indice i,t = demande du revendeur n°i au pas de temps t
 
 	for (i, line) in enumerate(allLines[nextIndex:nextIndex+n-1])
 
