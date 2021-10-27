@@ -1,6 +1,8 @@
 #Fichier qui permet de créer les différents PLNE pour le problème du VRP
 
-using JuMP, CPLEX#GLPK#CPLEX
+using JuMP
+using CPLEX
+#using GLPK
 
 function createVRP_MTZ(params, nodes, demands, costs, t)
 
@@ -29,8 +31,8 @@ function createVRP_MTZ(params, nodes, demands, costs, t)
     
 
     ####################CONTRAINTES####################
-    @constraint(model, sum(x[0, j] for j in 1:n)<=m)#contrainte 6
-    @constraint(model, sum(x[i, 0] for i in 1:n)<=m)#contrainte 7
+    @constraint(model, sum(x[0, j] for j in 1:n) <= m)#contrainte 6
+    @constraint(model, sum(x[i, 0] for i in 1:n) <= m)#contrainte 7
 
     for i in 1:n
 

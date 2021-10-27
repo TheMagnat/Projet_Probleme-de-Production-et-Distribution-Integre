@@ -11,7 +11,7 @@ include("InstanceLoader.jl")
 
 function resolvePlne(model, showVar=true)
 
-
+	optimize!(model)
 
 	if showVar
 
@@ -35,8 +35,9 @@ end
 
 
 #Exemple
-params, nodes, demands, costs = readPRP("/Users/davidpinaud/GitHub/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_#ABS1_15_1.prp")
-#model = createLSP(params, nodes, demands, costs)
-model = createVRP_MTZ(params, nodes, demands, costs,1)
+#params, nodes, demands, costs = readPRP("/Users/davidpinaud/GitHub/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_#ABS1_15_1.prp")
+params, nodes, demands, costs = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
+model = createLSP(params, nodes, demands, costs)
+#model = createVRP_MTZ(params, nodes, demands, costs, 1)
 
-resolvePlne(model, true)
+resolvePlne(model, false)

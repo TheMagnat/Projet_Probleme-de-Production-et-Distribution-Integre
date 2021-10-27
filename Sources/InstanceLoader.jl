@@ -55,7 +55,7 @@ function readPRP(filename)
 	Informations du fournisseur et des revendeurs: [Fourni{}, reven_1{}, ..., reven_n{}]
 		h = Cout de stockage
 		L = Capacité de stockage max
-		L0 = Capacité de stockage initiale
+		L0 = quantité en stock initiale
 		
 		x et y (2 premières valeurs) = Coordonnées sur la "carte" des revendeurs et du fournisseur
 	=#
