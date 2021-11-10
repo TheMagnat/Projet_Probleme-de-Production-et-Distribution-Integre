@@ -13,6 +13,14 @@ function resolvePlne(model, showVar=true)
 
 	optimize!(model)
 
+	println(solution_summary(model, verbose=true))
+	status = termination_status(model)
+
+	if status == JuMP.MathOptInterface.OPTIMAL
+		println("Valeur optimale = ", objective_value(model))
+	end
+
+
 	if showVar
 
 		last = ""
@@ -35,9 +43,8 @@ end
 
 
 #Exemple
-#params, nodes, demands, costs = readPRP("/Users/davidpinaud/GitHub/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_#ABS1_15_1.prp")
-params, nodes, demands, costs = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
-model = createLSP(params, nodes, demands, costs)
-#model = createVRP_MTZ(params, nodes, demands, costs, 1)
-
+params, nodes, demands, costs = readPRP("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp")
+#params, nodes, demands, costs = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
+#model = createLSP(params, nodes, demands, costs)
+model = createVRP_MTZ(params, nodes, demands, costs, 1)
 resolvePlne(model, false)

@@ -3,7 +3,7 @@
 using JuMP
 using CPLEX
 #using GLPK
-
+include("InstanceLoader.jl")
 function createVRP_MTZ(params, nodes, demands, costs, t)
 
     model = Model(CPLEX.Optimizer)
@@ -34,17 +34,20 @@ function createVRP_MTZ(params, nodes, demands, costs, t)
     @constraint(model, sum(x[0, j] for j in 1:n) <= m)#contrainte 6
     @constraint(model, sum(x[i, 0] for i in 1:n) <= m)#contrainte 7
 
-    for i in 1:n
+    for i in 0:n
 
-        nodesIndexWithoutI = filter(e -> e != i, 1:n)
+        nodesIndexWithoutI = filter(e -> e != i, 0:n)
 
         @constraint(model, sum(x[i,j] for j in nodesIndexWithoutI) == 1)#contraintes 8
         @constraint(model, sum(x[j,i] for j in nodesIndexWithoutI) == 1)#contraintes 9
 
+    end
+    for i in 1:n
+
+        nodesIndexWithoutI = filter(e -> e != i, 1:n)
         for j in nodesIndexWithoutI
             @constraint(model, w[i] - w[j] >= demands[i, t] - (Q+demands[i, t]) * (1 - x[i, j]))#contrainte 10
         end
-
     end
 
     ####################FONCTION OBJECTIF####################
@@ -55,8 +58,8 @@ function createVRP_MTZ(params, nodes, demands, costs, t)
 end
 
 #Exemple
-#params, nodes, demands, costs = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
+# params, nodes, demands, costs = readPRP("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp")
 
-#model = createVRP_MTZ(params, nodes, demands, costs, 1)
+# model = createVRP_MTZ(params, nodes, demands, costs, 1)
 
-#println(model)
+# println(model)

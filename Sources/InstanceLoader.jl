@@ -1,6 +1,9 @@
 
-using LightGraphs, SimpleWeightedGraphs
+using GraphPlot
+using SimpleGraphs
+using Graphs
 using OffsetArrays
+using Compose,Cairo,Fontconfig
 
 function readPRP(filename)
 
@@ -156,6 +159,32 @@ function readPRP(filename)
 
 end
 
+function genererGrapheComplet(nodes)
+    g=SimpleDiGraph(length(nodes))	 # Creation of a directed graph with 1 node
+	for i in 0:length(nodes)-1
+		for j in 0:length(nodes)-1
+			if(i!=j)
+				add_edge!(g,i,j)
+			end
+		end
+	end
+    return g
+end
+
+function genererGraphe(nodes,edges)
+    g=SimpleDiGraph(length(nodes))	 # Creation of a directed graph with 1 node
+	for (node1,node2) in edges
+		add_edge!(g,node1,node2)
+	end
+    return g
+end
+
+function generateGraphPDF(destination_file_name,file_name,graph)
+	nodesize = [Graphs.outdegree(graph, v) for v in Graphs.vertices(graph)] #Gérer la taille des noeuds
+	layout=(args...)->spring_layout(args...; C=20) #Gérer l'espacement des noeuds
+	draw(PDF(destination_file_name*file_name,16,16),gplot(graph,nodesize=nodesize,layout=layout,EDGELINEWIDTH=0.01))
+	print("Finish")
+end
 
 function generateGraph(params, nodes, demands)
 	#Code pour faire un graph
@@ -178,6 +207,8 @@ end
 
 #Exemple A
 #params, nodes, demands, fees = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
+params, nodes, demands, costs = readPRP("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp")
+generateGraphPDF("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre","/graphe.pdf",genererGrapheComplet(nodes))
 
 #println(nodes[0])
 
