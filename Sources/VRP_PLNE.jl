@@ -58,8 +58,8 @@ function createVRP_MTZ(params, nodes, demands, costs, t)
 end
 
 #Exemple
-# params, nodes, demands, costs = readPRP("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp")
+#  params, nodes, demands, costs = readPRP("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp")
 
-# model = createVRP_MTZ(params, nodes, demands, costs, 1)
+#  model = createVRP_MTZ(params, nodes, demands, costs, 1)
 
-# println(model)
+#  println(model)

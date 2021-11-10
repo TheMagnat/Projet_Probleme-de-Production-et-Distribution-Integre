@@ -183,7 +183,6 @@ function generateGraphPDF(destination_file_name,file_name,graph)
 	nodesize = [Graphs.outdegree(graph, v) for v in Graphs.vertices(graph)] #Gérer la taille des noeuds
 	layout=(args...)->spring_layout(args...; C=20) #Gérer l'espacement des noeuds
 	draw(PDF(destination_file_name*file_name,16,16),gplot(graph,nodesize=nodesize,layout=layout,EDGELINEWIDTH=0.01))
-	print("Finish")
 end
 
 function generateGraph(params, nodes, demands)
@@ -207,8 +206,8 @@ end
 
 #Exemple A
 #params, nodes, demands, fees = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
-params, nodes, demands, costs = readPRP("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp")
-generateGraphPDF("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre","/graphe.pdf",genererGrapheComplet(nodes))
+#params, nodes, demands, costs = readPRP("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp")
+#generateGraphPDF("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre","/graphe.pdf",genererGrapheComplet(nodes))
 
 #println(nodes[0])
 
