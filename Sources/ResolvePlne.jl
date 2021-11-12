@@ -44,19 +44,12 @@ function resolvePlne(model, showVar=true, nameOfPL="")
 
 	return model
 
-<<<<<<< HEAD
-#Exemple
-#params, nodes, demands, costs = readPRP("/Users/davidpinaud/GitHub/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_#ABS1_15_1.prp")
-params, nodes, demands, costs = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
-#model = createLSP(params, nodes, demands, costs)
-model = createVRP_MTZ(params, nodes, demands, costs, 1)
-=======
 end
->>>>>>> 2d27f329494a69433419d399456aa3d34bf1f9ac
 
 function getModelVariables(model)
 	
 end
+
 #Exemple
 params, nodes, demands, costs = readPRP("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp")
 #params, nodes, demands, costs = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
