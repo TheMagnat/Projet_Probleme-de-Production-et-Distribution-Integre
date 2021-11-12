@@ -1,4 +1,5 @@
 using JuMP
+using Dates
 
 const OPTIMAL = JuMP.MathOptInterface.OPTIMAL
 const INFEASIBLE = JuMP.MathOptInterface.INFEASIBLE
@@ -9,9 +10,17 @@ include("LSP_PLNE.jl")
 include("VRP_PLNE.jl")
 include("InstanceLoader.jl")
 
-function resolvePlne(model, showVar=true)
+function resolvePlne(model, showVar=true, nameOfPL="")
 
 	optimize!(model)
+
+	println(solution_summary(model, verbose=true))
+	status = termination_status(model)
+
+	if status == JuMP.MathOptInterface.OPTIMAL
+		println("Valeur optimale = ", objective_value(model))
+	end
+
 
 	if showVar
 
@@ -31,13 +40,26 @@ function resolvePlne(model, showVar=true)
 
 	println("\nObjetive value: ", objective_value(model))
 
-end
+	write_to_file(model, nameOfPL*"_model_"*string(Dates.now())*".mps")
 
+	return model
 
+<<<<<<< HEAD
 #Exemple
 #params, nodes, demands, costs = readPRP("/Users/davidpinaud/GitHub/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_#ABS1_15_1.prp")
 params, nodes, demands, costs = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
 #model = createLSP(params, nodes, demands, costs)
 model = createVRP_MTZ(params, nodes, demands, costs, 1)
+=======
+end
+>>>>>>> 2d27f329494a69433419d399456aa3d34bf1f9ac
 
-resolvePlne(model, false)
+function getModelVariables(model)
+	
+end
+#Exemple
+params, nodes, demands, costs = readPRP("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp")
+#params, nodes, demands, costs = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
+#model = createLSP(params, nodes, demands, costs)
+model = createVRP_MTZ(params, nodes, demands, costs, 1)
+resolvePlne(model, false, "VRP")

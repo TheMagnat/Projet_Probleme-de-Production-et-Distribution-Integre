@@ -45,15 +45,13 @@ function createVRP_MTZ(params, nodes, demands, costs, t)
         @constraint(model, sum(x[j,i] for j in nodesIndexWithoutI) == 1)#contraintes 9
 
     end
-
-
+    
     for i in 1:n
 
         nodesIndexWithoutI = filter(e -> e != i, 1:n)
         for j in nodesIndexWithoutI
             @constraint(model, w[i] - w[j] >= demands[i, t] - (Q+demands[i, t]) * (1 - x[i, j]))#contrainte 10
         end
-
     end
 
     ####################FONCTION OBJECTIF####################
@@ -64,8 +62,8 @@ function createVRP_MTZ(params, nodes, demands, costs, t)
 end
 
 #Exemple
-#params, nodes, demands, costs = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
+#  params, nodes, demands, costs = readPRP("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp")
 
-#model = createVRP_MTZ(params, nodes, demands, costs, 1)
+#  model = createVRP_MTZ(params, nodes, demands, costs, 1)
 
-#println(model)
+#  println(model)
