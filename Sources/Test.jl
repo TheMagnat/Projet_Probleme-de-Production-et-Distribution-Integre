@@ -44,7 +44,7 @@ function testVRP_MTZ(solve=false, t=1)
 	model = createVRP_MTZ(params, nodes, demands, costs, t)
 
 	if solve
-		resolvePlne(model, false, "LSP")
+		resolvePlne(model, false, "VRP_MTZ")
 	end
 
 end
