@@ -4,6 +4,8 @@ using JuMP
 using CPLEX
 #using GLPK
 
+include("InstanceLoader.jl")
+
 function createVRP_MTZ(params, nodes, demands, costs, t)
 
     model = Model(CPLEX.Optimizer)
@@ -23,8 +25,8 @@ function createVRP_MTZ(params, nodes, demands, costs, t)
 
     ####################VARIABLES#######################
     @variable(model, x[i=0:n, j=0:n], Bin)#Variable binaire x_(i,j) pour chaque arête
-    for i in 0:n 
-        delete(model, x[i, i]) #on enlève les variables qui correspondent aux arêtes en trop (les (i,i))
+    for i in 0:n
+        delete(model, x[i, i]) #on enlève les variables qui correspondent aux arêtes en trop (les (i, i))
     end
 
     @variable(model, 0 <= w[i=1:n] <= Q)#Variables w_i
@@ -34,13 +36,20 @@ function createVRP_MTZ(params, nodes, demands, costs, t)
     @constraint(model, sum(x[0, j] for j in 1:n) <= m)#contrainte 6
     @constraint(model, sum(x[i, 0] for i in 1:n) <= m)#contrainte 7
 
-    for i in 1:n
 
-        nodesIndexWithoutI = filter(e -> e != i, 1:n)
+    for i in 0:n
+
+        nodesIndexWithoutI = filter(e -> e != i, 0:n)
 
         @constraint(model, sum(x[i,j] for j in nodesIndexWithoutI) == 1)#contraintes 8
         @constraint(model, sum(x[j,i] for j in nodesIndexWithoutI) == 1)#contraintes 9
 
+    end
+
+
+    for i in 1:n
+
+        nodesIndexWithoutI = filter(e -> e != i, 1:n)
         for j in nodesIndexWithoutI
             @constraint(model, w[i] - w[j] >= demands[i, t] - (Q+demands[i, t]) * (1 - x[i, j]))#contrainte 10
         end
