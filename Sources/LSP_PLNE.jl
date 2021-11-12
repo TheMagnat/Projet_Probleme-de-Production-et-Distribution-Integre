@@ -1,10 +1,6 @@
 using JuMP
-#using GLPK
 using CPLEX
-
-#For exemples
-include("InstanceLoader.jl")
-
+#using GLPK
 
 function createLSP(params, nodes, demands, costs)
 
@@ -87,12 +83,3 @@ function createLSP(params, nodes, demands, costs)
 	return model
 
 end
-
-
-###Exemple
-#params, nodes, demands, costs = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
-
-#model = createLSP(params, nodes, demands, costs)
-
-###TODO: Creer la fonction de résolution
-#reseolvePlne(model)

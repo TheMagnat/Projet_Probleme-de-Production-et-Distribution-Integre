@@ -3,7 +3,7 @@ using GraphPlot
 using SimpleGraphs
 using Graphs
 using OffsetArrays
-using Compose,Cairo,Fontconfig
+using Compose, Cairo, Fontconfig
 
 function readPRP(filename)
 
@@ -149,70 +149,44 @@ function readPRP(filename)
 
 		end
 	end
-
-
-
-
 	
 	return params, nodes, demands, transportFee
 	
-
 end
 
-function genererGrapheComplet(nodes)
+function generateGraphComplet(nodes)
+
     g=SimpleDiGraph(length(nodes))	 # Creation of a directed graph with 1 node
+
 	for i in 0:length(nodes)-1
 		for j in 0:length(nodes)-1
+
 			if(i!=j)
 				add_edge!(g,i,j)
 			end
+
 		end
 	end
+
     return g
+
 end
 
-function genererGraphe(nodes,edges)
+function generateGraph(nodes,edges)
+
     g=SimpleDiGraph(length(nodes))	 # Creation of a directed graph with 1 node
+
 	for (node1,node2) in edges
 		add_edge!(g,node1,node2)
 	end
+
     return g
+
 end
 
-function generateGraphPDF(destination_file_name,file_name,graph)
+function generateGraphPDF(destination_file_name, file_name, graph)
 	nodesize = [Graphs.outdegree(graph, v) for v in Graphs.vertices(graph)] #Gérer la taille des noeuds
-	layout=(args...)->spring_layout(args...; C=20) #Gérer l'espacement des noeuds
-	draw(PDF(destination_file_name*file_name,16,16),gplot(graph,nodesize=nodesize,layout=layout,EDGELINEWIDTH=0.01))
+	layout = (args...)->spring_layout(args...; C=20) #Gérer l'espacement des noeuds
+	draw(PDF(destination_file_name*"/"*file_name, 16, 16), gplot(graph, nodesize=nodesize, layout=layout, EDGELINEWIDTH=0.01))
 end
-
-function generateGraph(params, nodes, demands)
-	#Code pour faire un graph
-	# for (i,line) in enumerate(eachline(f))
-
-	# 	x = split(line," ") # For each line of the file, splitted using space as separator
-
-	# 	if(x[1]=="p")       # A line beginning with a 'p' gives the graph size
-	# 		n = parse(Int,x[3])
-	# 		g = SimpleWeightedGraph(n)  # Recreation of a undirected graph with n nodes
-	# 	elseif(x[1] == "e") # A line beginning with a 'e' gives the edges
-	# 		v_1 = parse(Int, x[2])
-	# 		v_2 = parse(Int, x[3])
-	# 		add_edge!(g,v_1,v_2)
-	# 		g.weights[v_1,v_2] = 1  # without edge weight
-	# 	end
-	# end
-end
-
-
-#Exemple A
-#params, nodes, demands, fees = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
-#params, nodes, demands, costs = readPRP("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp")
-#generateGraphPDF("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre","/graphe.pdf",genererGrapheComplet(nodes))
-
-#println(nodes[0])
-
-#println(fees)
-
-#Exemple B
-#readPRP("../PRP_instances/B_200_instance20.prp")
 

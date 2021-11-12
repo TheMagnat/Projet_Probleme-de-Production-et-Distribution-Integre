@@ -5,10 +5,6 @@ const OPTIMAL = JuMP.MathOptInterface.OPTIMAL
 const INFEASIBLE = JuMP.MathOptInterface.INFEASIBLE
 const UNBOUNDED = JuMP.MathOptInterface.DUAL_INFEASIBLE
 
-#For exemples
-include("LSP_PLNE.jl")
-include("VRP_PLNE.jl")
-include("InstanceLoader.jl")
 
 function resolvePlne(model, showVar=true, nameOfPL="")
 
@@ -50,9 +46,3 @@ function getModelVariables(model)
 	
 end
 
-#Exemple
-params, nodes, demands, costs = readPRP("/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp")
-#params, nodes, demands, costs = readPRP("../PRP_instances/A_014_#ABS1_15_1.prp")
-#model = createLSP(params, nodes, demands, costs)
-model = createVRP_MTZ(params, nodes, demands, costs, 1)
-resolvePlne(model, false, "VRP")
