@@ -6,24 +6,28 @@ const INFEASIBLE = JuMP.MathOptInterface.INFEASIBLE
 const UNBOUNDED = JuMP.MathOptInterface.DUAL_INFEASIBLE
 
 
-function resolvePlne(model, showVar=true, nameOfPL="")
+function resolvePlne(model, verbose=1, nameOfPL="")
 
 	optimize!(model)
 
-	println(solution_summary(model, verbose=true))
-	status = termination_status(model)
-
-	if status == JuMP.MathOptInterface.OPTIMAL
-		println("Valeur optimale = ", objective_value(model))
+	if verbose == 3
+		println(solution_summary(model, verbose=true))
+		return model
 	end
 
+	status = termination_status(model)
 
-	if showVar
+	# if status == JuMP.MathOptInterface.OPTIMAL
+	# 	println("Valeur optimale = ", objective_value(model))
+	# end
+
+
+	if verbose >= 2
 
 		last = ""
 		for var in all_variables(model)
 
-			which = split(name(var), "[")[1]
+			which = split(JuMP.name(var), "[")[1]
 			if which != last
 				last = which
 				println("\nVariables $(last)")
@@ -34,9 +38,13 @@ function resolvePlne(model, showVar=true, nameOfPL="")
 
 	end
 
-	println("\nObjetive value: ", objective_value(model))
+	if verbose >= 1
+		println("\nObjetive value: ", objective_value(model))
+	end
 
-	write_to_file(model, nameOfPL*"_model_"*string(Dates.now())*".mps")
+	if ! isempty(nameOfPL) 
+		write_to_file(model, nameOfPL*"_model_"*string(Dates.now())*".mps")
+	end
 
 	return model
 

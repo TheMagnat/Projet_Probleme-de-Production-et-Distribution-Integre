@@ -91,7 +91,7 @@ function readPRP(filename)
 	end
 
 	#0 based index nodes, more coherent with the project
-	nodes = OffsetVector(nodes, 0:(size(nodes)[1] - 1))
+	nodes = OffsetVector(nodes, 0:(size(nodes, 1) - 1))
 
 	nextIndex = nextIndex+n+2
 

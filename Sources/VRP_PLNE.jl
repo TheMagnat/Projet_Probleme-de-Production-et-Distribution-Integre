@@ -22,12 +22,12 @@ function createVRP_MTZ(params, nodes, demands, costs, t)
 
 
     ####################VARIABLES#######################
-    @variable(model, x[i=0:n, j=0:n], Bin)#Variable binaire x_(i,j) pour chaque arête
+    @variable(model, x[i=0:n, j=0:n], Bin) #Variable binaire x_(i,j) pour chaque arête
     for i in 0:n
         delete(model, x[i, i]) #on enlève les variables qui correspondent aux arêtes en trop (les (i, i))
     end
 
-    @variable(model, 0 <= w[i=1:n] <= Q)#Variables w_i
+    @variable(model, 0 <= w[i=1:n] <= Q) #Variables w_i
     
 
     ####################CONTRAINTES####################
@@ -35,7 +35,7 @@ function createVRP_MTZ(params, nodes, demands, costs, t)
     @constraint(model, sum(x[i, 0] for i in 1:n) <= m)#contrainte 7
 
 
-    for i in 0:n
+    for i in 1:n
 
         nodesIndexWithoutI = filter(e -> e != i, 0:n)
 

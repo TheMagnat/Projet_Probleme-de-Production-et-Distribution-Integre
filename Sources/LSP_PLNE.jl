@@ -63,10 +63,7 @@ function createLSP(params, nodes, demands, costs)
 	@objective(model, Min, obj)
 
 	###Contraintes
-
-	
-
-	for t in 1:params["l"] #commence à 2 ?? S'il commençait à 1 I[0,t-1] n'aurait pas de sens pour t=1
+	for t in 1:params["l"]
 
 		@constraint(model, I[0, t-1] + p[t] == I[0, t] + sum(q[i, t] for i in 1:params["n"])) #contraintes 1
 
