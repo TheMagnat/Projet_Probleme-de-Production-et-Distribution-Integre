@@ -4,6 +4,8 @@ include("VRP_PLNE.jl")
 include("LSP_PLNE.jl")
 include("ResolvePlne.jl")
 
+include("VRP_Heuristic.jl")
+
 
 #Instances A
 INSTANCE_PATH = "../PRP_instances/A_014_#ABS1_15_1.prp"
@@ -128,8 +130,23 @@ function testLSP_Then_VRP_MTZ()
 
 end
 
+
+function testBinPacking(t=1)
+
+	params, nodes, demands, costs = readPRP(INSTANCE_PATH)
+
+	createVRP_MTZ(params, nodes, demands, costs, t)
+
+	binPacking(params, nodes, demands, costs, t)
+
+end
+
 #testGenerateGraph()
 #testLSP(true)
 #testVRP_MTZ(true)
-testLSP_Then_VRP_MTZ()
+#testLSP_Then_VRP_MTZ()
+
+testBinPacking()
+
+
 
