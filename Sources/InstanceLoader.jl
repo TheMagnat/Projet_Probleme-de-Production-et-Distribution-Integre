@@ -33,7 +33,7 @@ function readPRP(filename)
 
 		u = Cout par unité produite
 
-		C = Capacité de production max du fournisseur ??? --> oui c'est M_t dans le PL du LSP, dans la contrainte p_t≤M_ty_t> quand y_t=1 on peut produire au max M_t=C 
+		C = Capacité de production max du fournisseur ??? --> oui c'est M_t dans le PL du LSP, dans la contrainte p_t≤M_ty_t> quand y_t=1 on peut produire au max M_t=C, en fait, on considère que la capacité de production du fournisseur est infini 
 		
 
 		??? k = Nombre de véhicule de transports disponible ??? ou nombre de tournées
@@ -57,8 +57,8 @@ function readPRP(filename)
 	#=
 	Informations du fournisseur et des revendeurs: [Fourni{}, reven_1{}, ..., reven_n{}]
 		h = Cout de stockage
-		L = Capacité de stockage max
-		L0 = quantité en stock initiale
+		L = Capacité de stockage max (capacité de stockage du fournisseur est CONSIDÉRÉ COMME INFINI)
+		L0 = Stock initial 
 		
 		x et y (2 premières valeurs) = Coordonnées sur la "carte" des revendeurs et du fournisseur
 	=#
@@ -91,7 +91,7 @@ function readPRP(filename)
 	end
 
 	#0 based index nodes, more coherent with the project
-	nodes = OffsetVector(nodes, 0:(size(nodes, 1) - 1))
+	nodes = OffsetVector(nodes, 0:(size(nodes)[1] - 1))
 
 	nextIndex = nextIndex+n+2
 
@@ -144,7 +144,7 @@ function readPRP(filename)
 			yj=nodes[j]["y"]
 			transportFee[(i, j)] = costFunc(xi, yi, xj, yj)
 
-			#Peut servir ?
+			#Graphe Orienté Complet
 			transportFee[(j, i)] = transportFee[(i,j)]
 
 		end
