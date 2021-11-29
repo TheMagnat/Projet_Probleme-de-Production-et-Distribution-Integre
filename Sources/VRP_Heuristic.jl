@@ -1,5 +1,5 @@
 
-using Base.Iterators.product
+using Base.Iterators
 using LinearAlgebra
 function binPacking(params, nodes, demands, costs, t)
 
@@ -43,35 +43,35 @@ function binPacking(params, nodes, demands, costs, t)
 
 end
 
-function clark_wright(params,nodes,demands,t)
+function clark_wright(params,nodes,demands,costs,t)
 	#=
 	Retourne une liste de tournées qui vérifie la contrainte de poids sur les véhicules
 	Le nombre de tournée peut toutefois excéder le nombre de véhicules disponible.
 	=#
-	n=size(nodes)-1
-	k=n^2
+	n=length(nodes)-1
 	Q = params["Q"]
 
 	#Initialiser S
 	S=Array[]
-	for i in nodes
+	for i in 1:n
 		push!(S,[0,i])
 	end
 
 	#Calcul des s_{i,j} et mettre dans l'ordre décroissant
 	s=[]
-	for (i,j) in product(nodes,nodes)
+	for (i,j) in product(1:n,1:n)
 		if i!=j
-			push!(s,[(i,j),costs[(0,i)]+costs[(0,j)+costs[(i,j)]]])
+			push!(s,[(i,j),costs[(0,i)]+costs[(0,j)]+costs[(i,j)]])
 		end
 	end
 	sort!(s, by = x->x[2] ,rev=true) #by = key pour sort, rev = reverse (ordre décroissant)
 
 	#Construction des circuits (attention il peut en avoir plus de m (le nombre de camion disponible))
+	k=length(s)
 	while k>=1
 
-		i=s[k][1]
-		j=s[k][2]
+		i=s[k][1][1]
+		j=s[k][1][2]
 		foundi=false
 		foundj=false
 		circuit_i=NaN
@@ -106,15 +106,23 @@ function clark_wright(params,nodes,demands,t)
 
 			#Calcul demande du nouveau circuit circuit_union
 			demandeUnion=0 
-			for l in 1:size(circuit_union)
+			for l in 2:length(circuit_union) #commence à 2 car le premier noeud du circuit est 0 (le dépot n'a pas de demande)
 				demandeUnion+=demands[circuit_union[l],t]
 			end
 
 			#Si la demande du nouveau circuit n'est pas trop pour un seul camion
 			if demandeUnion<=Q
 				#suppression des circuits circuit_i et circuit_j
-				deleteat!(S,findall(x->x==circuit_i)) 
-				deleteat!(S,findall(x->x==circuit_j))
+				for l in 1:length(S)
+					if(S[l]==circuit_i)
+						delete!(S,l)
+					end
+				end
+				for l in 1:length(S)
+					if(S[l]==circuit_j)
+						delete!(S,l)
+					end
+				end
 				# on a construit un nouveau circuit
 				push!(S,circuit_union) 
 			end
@@ -125,7 +133,7 @@ function clark_wright(params,nodes,demands,t)
 	return S #la liste des circuits qui sont des tournées valides (qui respectent la contrainte de poids)
 end
 
-function sectorielle(params,nodes,demands,t,angle,costs) #ON SUPPOSE QUE 360 EST DIVISIBLE PAR ANGLE (sinon trop compliqué, flemme)
+function sectorielle(params,nodes,demands,costs,t,angle) #ON SUPPOSE QUE 360 EST DIVISIBLE PAR ANGLE (sinon trop compliqué, flemme)
 	distance_du_point_le_plus_eloigne=0
 	origin=nodes[0]
 	#Calcul de la distance du point le plus eloigné
@@ -162,8 +170,9 @@ function sectorielle(params,nodes,demands,t,angle,costs) #ON SUPPOSE QUE 360 EST
 
 	#Création secteurs (il y en a 360/angle)
 	secteurs=[]
-	for i in 1:size(triangles)
+	for i in 1:length(triangles)
 		push!(secteurs,[origin])
+	end
 	initial=true
 	for node in nodes
 		if initial
@@ -171,7 +180,7 @@ function sectorielle(params,nodes,demands,t,angle,costs) #ON SUPPOSE QUE 360 EST
 			continue
 		end
 		k=1
-		for [Ori,A,B] in triangles
+		for (Ori,A,B) in triangles
 			AB=vecteurEntreDeuxPoints(A,B)
 			BA=vecteurEntreDeuxPoints(B,A)
 
@@ -196,7 +205,7 @@ function sectorielle(params,nodes,demands,t,angle,costs) #ON SUPPOSE QUE 360 EST
 
 	ens_de_ens_de_circuits=[]
 	for secteur in secteurs
-		push!(ens_de_ens_de_circuits,clark_wright(params,secteur,demands,t))
+		push!(ens_de_ens_de_circuits,clark_wright(params,secteur,demands,costs,t))
 	end
 
 	ens_final=[]
@@ -205,10 +214,10 @@ function sectorielle(params,nodes,demands,t,angle,costs) #ON SUPPOSE QUE 360 EST
 			push!(ens_final,circuit)
 		end
 	end
-	
 	return ens_final
-	
 end
+
 
 function vecteurEntreDeuxPoints(pt1,pt2)
 	return (pt2[1]-pt1[1],pt2[2]-pt1[2])
+end

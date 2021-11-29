@@ -8,8 +8,8 @@ include("VRP_Heuristic.jl")
 
 
 #Instances A
-INSTANCE_PATH = "../PRP_instances/A_014_#ABS1_15_1.prp"
-#INSTANCE_PATH = "/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp"
+#INSTANCE_PATH = "../PRP_instances/A_014_#ABS1_15_1.prp"
+INSTANCE_PATH = "/Users/david_pinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp"
 
 #Instances B
 #INSTANCE_PATH = "../PRP_instances/B_200_instance20.prp"
@@ -141,12 +141,20 @@ function testBinPacking(t=1)
 
 end
 
+function test_clark_wright(t=1)
+	params, nodes, demands, costs = readPRP(INSTANCE_PATH)
+
+	circuits=clark_wright(params,nodes,demands,costs,t)
+
+	print(circuits)
+end
+
 #testGenerateGraph()
 #testLSP(true)
 #testVRP_MTZ(true)
 #testLSP_Then_VRP_MTZ()
 
-testBinPacking()
-
+#testBinPacking()
+test_clark_wright()
 
 
