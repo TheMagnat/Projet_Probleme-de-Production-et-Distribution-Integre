@@ -113,17 +113,31 @@ function clark_wright(params,nodes,demands,costs,t)
 			#Si la demande du nouveau circuit n'est pas trop pour un seul camion
 			if demandeUnion<=Q
 				#suppression des circuits circuit_i et circuit_j
+				list_a_delete=[]
+				trouve1=false
+				trouve2=false
 				for l in 1:length(S)
 					if(S[l]==circuit_i)
-						delete!(S,l)
+						push!(list_a_delete,l)
+						trouve1=true
+					end
+					if(S[l]==circuit_j)
+						push!(list_a_delete,l)
+						trouve2=true
+					end
+					if trouve1 && trouve2
+						break
 					end
 				end
-				for l in 1:length(S)
-					if(S[l]==circuit_j)
-						delete!(S,l)
+				S_temp=[]
+				for k in 1:length(S)
+					if k in list_a_delete
+						continue
 					end
+					push!(S_temp,S[k])
 				end
 				# on a construit un nouveau circuit
+				S=S_temp
 				push!(S,circuit_union) 
 			end
 		end
@@ -159,13 +173,13 @@ function sectorielle(params,nodes,demands,costs,t,angle) #ON SUPPOSE QUE 360 EST
 	angleNormalise=angle/360
 	triangles=[]
 	for i in 1:360/angle
-		push!(triangles,[origin])
+		push!(triangles,[(float(origin["x"]),float(origin["y"]))])
 	end
 	k=1
-	for i in 1:360/angle
-		point=(origin[1]+(1-(i-1)*angleNormalise)*distance_point_fictif_a_lorigine,origin[2]+(i-1)*angleNormalise*distance_point_fictif_a_lorigine)
-		push!(triangle[k],point)
-		k+=(i+1)%2
+	for i in 1:2*360/angle
+		point=(origin["x"]+(1-(i-1)*angleNormalise)*distance_point_fictif_a_lorigine,origin["y"]+(i-1)*angleNormalise*distance_point_fictif_a_lorigine)
+		push!(triangles[k],point)
+		k+=Integer((i+1)%2)
 	end
 
 	#Création secteurs (il y en a 360/angle)
@@ -180,22 +194,30 @@ function sectorielle(params,nodes,demands,costs,t,angle) #ON SUPPOSE QUE 360 EST
 			continue
 		end
 		k=1
-		for (Ori,A,B) in triangles
-			AB=vecteurEntreDeuxPoints(A,B)
-			BA=vecteurEntreDeuxPoints(B,A)
+		for (Ori,A,B) in triangles #detection de quel secteur est situé le point
+			# AB=vecteurEntreDeuxPoints(A,B)
+			# BA=vecteurEntreDeuxPoints(B,A)
 
-			OriA=vecteurEntreDeuxPoints(Ori,A)
-			AOri=vecteurEntreDeuxPoints(A,Ori)
+			# OriA=vecteurEntreDeuxPoints(Ori,A)
+			# AOri=vecteurEntreDeuxPoints(A,Ori)
 			
-			OriB=vecteurEntreDeuxPoints(Ori,B)
-			BOri=vecteurEntreDeuxPoints(B,Ori)
+			# OriB=vecteurEntreDeuxPoints(Ori,B)
+			# BOri=vecteurEntreDeuxPoints(B,Ori)
 			
-			ANode=vecteurEntreDeuxPoints(A,(node["X"],node["Y"]))
-			BNode=vecteurEntreDeuxPoints(B,(node["X"],node["Y"]))
-			OriNode=vecteurEntreDeuxPoints(C,(node["X"],node["Y"]))
+			# ANode=vecteurEntreDeuxPoints(A,(node["x"],node["y"]))
+			# BNode=vecteurEntreDeuxPoints(B,(node["x"],node["y"]))
+			# OriNode=vecteurEntreDeuxPoints(C,(node["x"],node["y"]))
 			
-			
-			if dot(cross(AB,ANode),cross(ANode,AOri))>=0 && dot(cross(BA,BNode),cross(BNode,BOri))>=0 && dot(cross(OriA,OriNode),cross(OriNode,OriB))>=0
+			# #print(AB,BA,OriA,AOri,OriB,BOri,ANode,BNode,OriNode)
+			# if dot(cross(AB,ANode),cross(ANode,AOri))>=0 && dot(cross(BA,BNode),cross(BNode,BOri))>=0 && dot(cross(OriA,OriNode),cross(OriNode,OriB))>=0
+			# 	push!(secteurs[k],node)
+			# 	break
+			# end
+
+			cond1=(A[1]-node["x"])*(B[2]-node["y"])-(A[2]-node["y"])*(B[1]-node["x"])
+			cond2=(B[1]-node["x"])*(Ori[2]-node["y"])-(B[2]-node["y"])*(Ori[1]-node["x"])
+			cond3=(Ori[1]-node["x"])*(A[2]-node["y"])-(Ori[2]-node["y"])*(A[1]-node["x"])
+			if((cond1>=0 && cond2>=0 && cond3>=0) || (cond1<0 && cond2<0 && cond3<0))
 				push!(secteurs[k],node)
 				break
 			end
@@ -219,5 +241,5 @@ end
 
 
 function vecteurEntreDeuxPoints(pt1,pt2)
-	return (pt2[1]-pt1[1],pt2[2]-pt1[2])
+	return [pt2[1]-pt1[1],pt2[2]-pt1[2]]
 end
