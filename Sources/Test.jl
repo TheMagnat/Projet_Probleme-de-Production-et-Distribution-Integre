@@ -135,8 +135,6 @@ function testBinPacking(t=1)
 
 	params, nodes, demands, costs = readPRP(INSTANCE_PATH)
 
-	createVRP_MTZ(params, nodes, demands, costs, t)
-
 	binPacking(params, nodes, demands, costs, t)
 
 end
