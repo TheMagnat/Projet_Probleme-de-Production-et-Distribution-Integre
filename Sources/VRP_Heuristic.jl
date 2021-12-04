@@ -17,7 +17,7 @@ function binPacking(params, nodes, demands, costs, t)
 		cumsum += demand
 
 		if cumsum > Q
-			push!(currentTour, 0)
+			#push!(currentTour, 0)
 			push!(allTour, currentTour)
 
 			#Reset
@@ -34,10 +34,11 @@ function binPacking(params, nodes, demands, costs, t)
 
 	# pas besoin ????
 	#push!(currentTour, 0)
-	#push!(allTour, currentTour)
 
-	#AFFICHAGE
-	print(allTour)
+	if length(currentTour) > 1
+		push!(allTour, currentTour)
+	end
+
 	
 	return allTour
 
