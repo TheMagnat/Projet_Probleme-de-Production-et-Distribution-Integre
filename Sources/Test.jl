@@ -54,100 +54,75 @@ function testVRP_MTZ(solve=false, t=1, verbose=1)
 end
 
 
-function testLSP_Then_VRP_MTZ()
 
-	t = 2
+#=
+t: choisir le temps sur lequel tester
+choice: Choisir l'heuristique à utiliser
+useLSP: Si vrai, appliquer d'abord le LSP pour obtenir les vrai valeur de VRP
+
+showMTZ:
+	0: Ne pas montrer le résultat de MTZ
+	1: Montrer le résultat de MTZ
+	2: Montrer le circuit de MTZ
+	3: Ne montrer que MTZ et pas l'heuristique
+
+heuristicExtraParam:
+	Paramètre en plus de ceux de base pour l'heuristique (Exemple l'angle pour sectorielle)
+
+=#
+function testHeuristicVRP(;t=1, choice=1, useLSP=false, showMTZ=0, heuristicExtraParam=[])
+	allHeuristic = [binPacking, clark_wright, sectorielle]
+
+	heuristic = allHeuristic[choice]
 
 	params, nodes, demands, costs = readPRP(INSTANCE_PATH)
 
-	tToVRP = getTrueVRP(params, nodes, demands, costs)
+	if useLSP
 
-	copyParams, copyNodes, copyDemandsAtT, copyCost = tToVRP[t]
-	
-	modelVRP = createVRP_MTZ(copyParams, copyNodes, copyDemandsAtT, copyCost, t)
-	resolvePlne(modelVRP, 1)
+		tToVRP = getTrueVRP(params, nodes, demands, costs)
+		params, nodes, demands, costs = tToVRP[t]
 
-end
+	end
 
-function testVRP_MTZtoCircuit(t=1)
+	if showMTZ > 0
 
-	params, nodes, demands, costs = readPRP(INSTANCE_PATH)
+		modelVRP = createVRP_MTZ(params, nodes, demands, costs, t)
+		resolvePlne(modelVRP, 0)
 
-	model = createVRP_MTZ(params, nodes, demands, costs, t)
+		println("\nMTZ objective value: ", objective_value(modelVRP))
+		
 
-	resolvePlne(model, 1)
+		if showMTZ > 1
+			circuits = vrpToCircuit(modelVRP, params)
+			totalCost = getCircuitsCost(circuits, costs)
 
-	circuits = vrpToCircuit(model, params)
+			println("MTZ circuits: ", circuits)
+			println("MTZ circuits cost: ", totalCost)
 
+			if showMTZ > 2
+				return
+			end
+
+		end
+
+		println()
+
+	end
+
+	circuits = heuristic(params, nodes, demands, costs, t, heuristicExtraParam...)
 	totalCost = getCircuitsCost(circuits, costs)
 
-	println("getCircuitsCost: ", totalCost)
+	println("Heuristic circuits: ", circuits)
+	println("Circuits cost: ", totalCost)
 
-end
-
-
-function testBinPacking(t=1)
-
-	params, nodes, demands, costs = readPRP(INSTANCE_PATH)
-
-	circuits = binPacking(params, nodes, demands, costs, t)
-
-	println("Circuits: ", circuits)
-
-	totalCost = getCircuitsCost(circuits, costs)
-
-	println("getCircuitsCost: ", totalCost)
-
-end
-
-function testBinPacking2(t=1)
-
-	params, nodes, demands, costs = readPRP(INSTANCE_PATH)
-	tToVRP = getTrueVRP(params, nodes, demands, costs)
-
-	copyParams, copyNodes, copyDemandsAtT, copyCost = tToVRP[t]
-	
-	modelVRP = createVRP_MTZ(copyParams, copyNodes, copyDemandsAtT, copyCost, t)
-	resolvePlne(modelVRP, 1)
-
-	circuits = binPacking(copyParams, copyNodes, copyDemandsAtT, copyCost, t)
-	println("Circuits: ", circuits)
-	totalCost = getCircuitsCost(circuits, costs)
-	println("getCircuitsCost: ", totalCost)
-
-end
-
-function test_clark_wright(t=1)
-	params, nodes, demands, costs = readPRP(INSTANCE_PATH)
-
-	circuits=clark_wright(params,nodes,demands,costs,t)
-
-	println("Circuits: ", circuits)
-
-	totalCost = getCircuitsCost(circuits, costs)
-
-	println("getCircuitsCost: ", totalCost)
-end
-
-function test_sectorielle(t=1,angle=30) #angle doit être un diviseur de 360
-	params, nodes, demands, costs = readPRP(INSTANCE_PATH)
-
-	circuits=sectorielle(params,nodes,demands,costs,t,angle)
-
-	println("Circuits: ", circuits)
-
-	totalCost = getCircuitsCost(circuits, costs)
-
-	println("getCircuitsCost: ", totalCost)
 end
 
 #testGenerateGraph()
 #testLSP(true)
 #testVRP_MTZ(true)
-#testLSP_Then_VRP_MTZ()
 
-#testBinPacking()
-testBinPacking2(3)
-#test_clark_wright()
-#test_sectorielle()
+#Nouvelle fonction qui réunis toutes les heuristique, le MTZ et le LSP
+testHeuristicVRP(t=3, choice=1, heuristicExtraParam=[], useLSP=true, showMTZ=2)
+
+
 

@@ -84,7 +84,8 @@ function getTrueVRP(params, nodes, demands, costs)
 
 	model = createLSP(params, nodes, demands, costs)
 
-	resolvePlne(model, 2)
+	resolvePlne(model, 0)
+	println()
 
 	demandsAtT = Array{Int, 2}(undef, params["n"], params["l"])
 	notEmptyIndexAtT = [[] for i in 1:params["l"]]
