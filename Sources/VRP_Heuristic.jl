@@ -1,38 +1,40 @@
 using Base.Iterators
 using LinearAlgebra
 
+include("Helper.jl")
+
 function binPacking(params, nodes, demands, costs, t)
 
 	Q = params["Q"]
 	cumsum = 0
 
 
-	allTour = Vector{Int64}[]
+	circuits = Vector{Int64}[]
 
-	#currentTour = Vector{Int64}()
-	currentTour = [0]
+	#circuit = Vector{Int64}()
+	circuit = [0]
 
 	for (i, demand) in enumerate(demands[:, t]) #Itérer sur les demandes au temps t
 
 		cumsum += demand
 
 		if cumsum > Q
-			push!(allTour, currentTour)
+			push!(circuits, circuit)
 
 			#Reset
 			cumsum = demand
-			currentTour = [0]
+			circuit = [0]
 		end
 
-		push!(currentTour, i)
+		push!(circuit, i)
 
 	end
 
-	if length(currentTour) > 1
-		push!(allTour, currentTour)
+	if length(circuit) > 1
+		push!(circuits, circuit)
 	end
 
-	return allTour
+	return circuits
 
 end
 
@@ -183,7 +185,177 @@ function clark_wright_old(params,nodes,demands,costs,t)
 	return S #la liste des circuits qui sont des tournées valides (qui respectent la contrainte de poids)
 end
 
-function sectorielle(params,nodes,demands,costs,t,angle) #ON SUPPOSE QUE 360 EST DIVISIBLE PAR ANGLE (sinon trop compliqué, flemme)
+
+function sectorielle(params, nodes, demands, costs, t, angle)
+
+	parts = div(360, angle)
+	angle = 360 / parts
+
+	center = [nodes[0]["y"], nodes[0]["x"]]
+	top = [1, 0]
+
+
+	sectors = [Int[] for i in 1:parts]
+
+	for (i, node) in enumerate(nodes[1:end])
+		centredPoint = [node["y"], node["x"]] - center
+
+		#Calcul du degré entre le vecteur directionnel [1, 0] et le vecteur centre vers le point
+		degree = mod(rad2deg(atan(top...) - atan(centredPoint...)), 360)
+
+		index = Int( div(degree, angle) ) % parts + 1
+
+		push!(sectors[index], i)
+	end
+
+	Q = params["Q"]
+
+	circuits = Vector{Int64}[]
+	circuit = [0]
+	cumsum = 0
+
+	for sector in sectors
+		for i in sector
+
+			demand = demands[i, t]
+			cumsum += demand
+
+			if cumsum > Q
+				push!(circuits, circuit)
+
+				#Reset
+				cumsum = demand
+				circuit = [0]
+			end
+
+			push!(circuit, i)
+
+		end
+	end
+
+	if length(circuit) > 1
+		push!(circuits, circuit)
+	end
+
+
+	return circuits
+
+end
+
+#=
+Reorder the circuit by putting the value (currtently at pos) at the first index
+=#
+function replace(circuit, pos)
+
+	return vcat(circuit[pos:end], circuit[1:pos-1])
+
+end
+
+function TSPVoisins(circuit)
+
+	n = length(circuit)
+
+	voisins = Vector{Int64}[]
+
+	for i in 1:n
+		for j in i+1:n
+			voisin = copy(circuit)
+			voisin[i], voisin[j] = voisin[j], voisin[i]
+
+			if i == 1
+				voisin = replace(voisin, j)
+			end
+			push!(voisins, voisin)
+		end
+	end
+
+	return voisins
+
+end
+
+function TSPBoost(circuits, costs)
+
+	for (i, circuit) in enumerate(circuits)
+
+		best = circuit
+		bestCost = getCircuitCost(circuit, costs)
+
+		while true
+
+			voisins = TSPVoisins(best)
+			noChange = true
+
+			for voisin in voisins
+				cost = getCircuitCost(voisin, costs)
+
+				if cost < bestCost
+					bestCost = cost
+					best = voisin
+					noChange = false
+				end
+
+			end
+
+			if noChange
+				break
+			end
+
+		end
+
+
+		circuits[i] = best
+
+	end
+
+	return circuits
+
+end
+
+
+function SwapCircuitVoisins(circuits)
+
+	voisins = Vector{Vector{Int64}}[]
+
+	for (i, circuit) in enumerate(circuits)
+		for (j, elem) in enumerate(circuit[2:end])
+
+			j += 1
+
+			for indexCircuit in 1:length(circuits)
+				if i != indexCircuit
+					voisin = deepcopy(circuits)
+
+					deleteat!(voisin[i], j)
+					push!(voisin[indexCircuit], elem)
+
+					push!(voisins, voisin)
+				end
+			end
+
+		end
+	end
+
+	return voisins
+
+end
+
+
+function metaHeuristic(circuits, params, costs)
+
+	currentCircuits = deepcopy(circuits)
+
+	if length(currentCircuits) < params["k"]
+		push!(currentCircuits, [0])
+	end
+
+	voisins = SwapCircuitVoisins(currentCircuits)
+
+	println(voisins)
+
+end
+
+#=
+function sectorielle_old(params,nodes,demands,costs,t,angle) #ON SUPPOSE QUE 360 EST DIVISIBLE PAR ANGLE (sinon trop compliqué, flemme)
 	distance_du_point_le_plus_eloigne=0
 	origin=nodes[0]
 	#Calcul de la distance du point le plus eloigné
@@ -275,7 +447,4 @@ function sectorielle(params,nodes,demands,costs,t,angle) #ON SUPPOSE QUE 360 EST
 	return ens_final
 end
 
-
-function vecteurEntreDeuxPoints(pt1,pt2)
-	return [pt2[1]-pt1[1],pt2[2]-pt1[2]]
-end
+=#

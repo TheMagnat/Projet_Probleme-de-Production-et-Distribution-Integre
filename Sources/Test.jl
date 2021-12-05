@@ -9,9 +9,9 @@ include("Helper.jl")
 
 
 #Instances A
-#INSTANCE_PATH = "../PRP_instances/A_014_#ABS1_15_1.prp"
+INSTANCE_PATH = "../PRP_instances/A_014_#ABS1_15_1.prp"
 #INSTANCE_PATH = "../PRP_instances/A_050_ABS14_50_1.prp"
-INSTANCE_PATH = "../PRP_instances/A_100_ABS5_100_4.prp"
+#INSTANCE_PATH = "../PRP_instances/A_100_ABS5_100_4.prp"
 #INSTANCE_PATH = "/Users/davidpinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp"
 #INSTANCE_PATH="/Users/davidpinaud/GitHub/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_050_ABS14_50_1.prp"
 
@@ -73,7 +73,7 @@ heuristicExtraParam:
 
 =#
 function testHeuristicVRP(;t=1, choice=1, useLSP=false, showMTZ=0, heuristicExtraParam=[])
-	allHeuristic = [binPacking, clark_wright, sectorielle]
+	allHeuristic = [binPacking, clark_wright, sectorielleGuigui]
 
 	heuristic = allHeuristic[choice]
 
@@ -114,8 +114,18 @@ function testHeuristicVRP(;t=1, choice=1, useLSP=false, showMTZ=0, heuristicExtr
 	circuits = heuristic(params, nodes, demands, costs, t, heuristicExtraParam...)
 	totalCost = getCircuitsCost(circuits, costs)
 
-	#println("Heuristic circuits: ", circuits)
+	println("Heuristic circuits: ", circuits)
 	println("Circuits cost: ", totalCost)
+
+	#println()
+	# circuits = TSPBoost(circuits, costs)
+	# totalCost = getCircuitsCost(circuits, costs)
+
+	# println("Heuristic with TSP Neighborhood circuits: ", circuits)
+	# println("Circuits cost: ", totalCost)
+
+
+	#metaHeuristic(circuits, params, costs)
 
 end
 
@@ -124,7 +134,7 @@ end
 #testVRP_MTZ(true)
 
 #Nouvelle fonction qui réunis toutes les heuristique, le MTZ et le LSP
-testHeuristicVRP(t=3, choice=2, heuristicExtraParam=[], useLSP=false, showMTZ=0)
+testHeuristicVRP(t=3, choice=3, heuristicExtraParam=[30], useLSP=false, showMTZ=0)
 
 
 
