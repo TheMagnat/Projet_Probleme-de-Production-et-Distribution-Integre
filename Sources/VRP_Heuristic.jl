@@ -1,6 +1,6 @@
-
 using Base.Iterators
 using LinearAlgebra
+
 function binPacking(params, nodes, demands, costs, t)
 
 	Q = params["Q"]
@@ -17,59 +17,120 @@ function binPacking(params, nodes, demands, costs, t)
 		cumsum += demand
 
 		if cumsum > Q
-			#push!(currentTour, 0)
 			push!(allTour, currentTour)
 
 			#Reset
 			cumsum = demand
-			#currentTour = Vector{Int64}()
 			currentTour = [0]
 		end
 
 		push!(currentTour, i)
 
-		
-
 	end
-
-	# pas besoin ????
-	#push!(currentTour, 0)
 
 	if length(currentTour) > 1
 		push!(allTour, currentTour)
 	end
 
-	
 	return allTour
 
 end
 
+#=
+Retourne une liste de tournées qui vérifie la contrainte de poids sur les véhicules
+Le nombre de tournée peut toutefois excéder le nombre de véhicules disponible.
+
+Note: Version plus rapide mais qui prend un peu plus de mémoire
+=#
 function clark_wright(params,nodes,demands,costs,t)
-	#=
-	Retourne une liste de tournées qui vérifie la contrainte de poids sur les véhicules
-	Le nombre de tournée peut toutefois excéder le nombre de véhicules disponible.
-	=#
-	n=length(nodes)-1
+
+	n = params["n"]
 	Q = params["Q"]
 
 	#Initialiser S
-	S=Array[]
-	for i in 1:n
-		push!(S,[0,i])
+	S = [[0, i] for i in 1:n]
+	whereIs = Dict(i => circuit for (i, circuit) in enumerate(S))
+
+	#Calcul des s_{i,j} et mettre dans l'ordre décroissant
+	s=[]
+	for i in 1:n, j in 1:n
+		if i != j
+			push!(s, [ (i,j), costs[(0, i)] + costs[(0, j)] - costs[(i, j)] ])
+		end
 	end
+	
+	sort!(s, by = x->x[2], rev=true) #by = key pour sort, rev = reverse (ordre décroissant)
+
+	#Construction des circuits (attention il peut en avoir plus de m (le nombre de camion disponible))
+	for k in 1:length(s)
+
+		i=s[k][1][1]
+		j=s[k][1][2]
+
+		circuit_i = whereIs[i]
+		circuit_j = whereIs[j]
+
+		#Si i et j ne sont pas dans le même circuit
+		if circuit_j != circuit_i
+
+			index_circuit_i = findfirst(item -> item == circuit_i, S)
+			index_circuit_j = findfirst(item -> item == circuit_j, S)
+
+			circuit_union = union(S[index_circuit_i], S[index_circuit_j])
+
+			#Calcul demande du nouveau circuit circuit_union
+			demandeUnion=0 
+			for l in circuit_union[2:end] #commence à 2 car le premier noeud du circuit est 0 (le dépot n'a pas de demande)
+				demandeUnion += demands[l, t]
+			end
+
+			#Si la demande du nouveau circuit n'est pas trop pour un seul camion
+			if demandeUnion <= Q
+				
+				deleteat!(S, sort!([index_circuit_i, index_circuit_j]))
+
+				push!(S, circuit_union)
+
+
+				for index in circuit_union
+					push!(whereIs, index=>circuit_union)
+				end
+
+			end
+		end
+
+	end
+
+	return S #la liste des circuits qui sont des tournées valides (qui respectent la contrainte de poids)
+end
+
+
+#=
+Retourne une liste de tournées qui vérifie la contrainte de poids sur les véhicules
+Le nombre de tournée peut toutefois excéder le nombre de véhicules disponible.
+
+Note: Version plus lente mais qui prend un peu moins de mémoire
+=#
+function clark_wright_old(params,nodes,demands,costs,t)
+	
+	n = params["n"]
+	Q = params["Q"]
+
+	#Initialiser S
+	S = [[0, i] for i in 1:n]
+	
 
 	#Calcul des s_{i,j} et mettre dans l'ordre décroissant
 	s=[]
 	for (i,j) in product(1:n,1:n)
-		if i!=j
-			push!(s,[(i,j),costs[(0,i)]+costs[(0,j)]+costs[(i,j)]])
+		if i != j
+			push!(s,[(i,j),costs[(0,i)]+costs[(0,j)]-costs[(i,j)]])
 		end
 	end
-	sort!(s, by = x->x[2] ,rev=true) #by = key pour sort, rev = reverse (ordre décroissant)
+	sort!(s, by = x->x[2], rev=true) #by = key pour sort, rev = reverse (ordre décroissant)
 
 	#Construction des circuits (attention il peut en avoir plus de m (le nombre de camion disponible))
-	k=length(s)
-	while k>=1
+	for k in 1:length(s)
 
 		i=s[k][1][1]
 		j=s[k][1][2]
@@ -77,17 +138,20 @@ function clark_wright(params,nodes,demands,costs,t)
 		foundj=false
 		circuit_i=NaN
 		circuit_j=NaN
-
+		index_i=0
+		index_j=0
 
 		#trouver les circuits où sont i et j
-		for circuit in S
+		for (index, circuit) in enumerate(S)
 			if i in circuit
 				circuit_i=circuit
 				foundi=true
+				index_i = index
 			end
 			if j in circuit
 				circuit_j=circuit
 				foundj=true
+				index_j = index
 			end
 			if foundi && foundj
 				break
@@ -95,15 +159,10 @@ function clark_wright(params,nodes,demands,costs,t)
 		end
 
 		#Si i et j ne sont pas dans le même circuit
-		if circuit_j!=circuit_i 
+		if circuit_j != circuit_i
 
 			#création de l'union de circuit_i et circuit_j
-			circuit_union=copy(circuit_i) 
-			for temp in circuit_j
-				if !(temp in circuit_union)
-					push!(circuit_union,temp)
-				end
-			end
+			circuit_union=union(circuit_i, circuit_j)
 
 			#Calcul demande du nouveau circuit circuit_union
 			demandeUnion=0 
@@ -114,35 +173,11 @@ function clark_wright(params,nodes,demands,costs,t)
 			#Si la demande du nouveau circuit n'est pas trop pour un seul camion
 			if demandeUnion<=Q
 				#suppression des circuits circuit_i et circuit_j
-				list_a_delete=[]
-				trouve1=false
-				trouve2=false
-				for l in 1:length(S)
-					if(S[l]==circuit_i)
-						push!(list_a_delete,l)
-						trouve1=true
-					end
-					if(S[l]==circuit_j)
-						push!(list_a_delete,l)
-						trouve2=true
-					end
-					if trouve1 && trouve2
-						break
-					end
-				end
-				S_temp=[]
-				for k in 1:length(S)
-					if k in list_a_delete
-						continue
-					end
-					push!(S_temp,S[k])
-				end
-				# on a construit un nouveau circuit
-				S=S_temp
+				deleteat!(S, sort!([index_i, index_j]))
+
 				push!(S,circuit_union) 
 			end
 		end
-		k-=1
 	end
 
 	return S #la liste des circuits qui sont des tournées valides (qui respectent la contrainte de poids)
