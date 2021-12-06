@@ -71,7 +71,8 @@ function readPRP(filename)
 
 
 		newNode = Dict{String, Int}()
-
+		
+		newNode["initial_index"]=Int(parse(Float64, allElems[1]))
 		newNode["x"] = Int(parse(Float64, allElems[2]))
 		newNode["y"] = Int(parse(Float64, allElems[3]))
 

@@ -87,7 +87,7 @@ function getTrueVRP(params, nodes, demands, costs)
 	resolvePlne(model, 0)
 	println()
 
-	demandsAtT = Array{Int, 2}(undef, params["n"], params["l"])
+	demandsAtT = Array{Int, 2}(undef, params["n"], params["l"]) #demandsAtT = qté à livrer u pas de temps t
 	notEmptyIndexAtT = [[] for i in 1:params["l"]]
 
 	for i in 1:params["n"]

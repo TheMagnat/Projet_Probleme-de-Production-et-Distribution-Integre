@@ -20,7 +20,6 @@ function createVRP_MTZ(params, nodes, demands, costs, t)
     n = params["n"]
     Q = params["Q"]
 
-
     ####################VARIABLES#######################
     @variable(model, x[i=0:n, j=0:n], Bin) #Variable binaire x_(i,j) pour chaque arête
     for i in 0:n
