@@ -273,7 +273,7 @@ function TSPVoisins(circuit)
 
 end
 
-function TSPBoost(circuits, costs)
+function TSPBoost(circuits, params, costs)
 
 	for (i, circuit) in enumerate(circuits)
 
@@ -339,18 +339,84 @@ function SwapCircuitVoisins(circuits)
 
 end
 
+#=
 
-function metaHeuristic(circuits, params, costs)
+Métaheuristique faisant:
+	- Ajout d'un circuit vide si possible
 
+	Voisin:
+		- Déplace chaque noeud de chaque circuit à la fin de chaque autre circuit
+		- Suppression du circuit vide si il l'est encore
+		- Appliquer la recherche local de TSP sur chaque circuit de chaque voisin
+
+=#
+function mixMetaheuristic(circuits, params, costs)
+
+	###Initiliaze
+
+	#Deep copy pour ne pas modifier circuits de base
 	currentCircuits = deepcopy(circuits)
+	currentCircuits = TSPBoost(currentCircuits, params, costs)
 
-	if length(currentCircuits) < params["k"]
-		push!(currentCircuits, [0])
+	#Noeud courant est le meilleur actuellement
+	best = deepcopy(currentCircuits)
+	bestCost = getCircuitsCost(best, costs)
+
+	while true
+		#Debug
+		#println("Loop ", bestCost)
+
+		###Creation des voisins
+
+		#Ajouter un circuit vide si le nombre n'est pas déjà dépassé
+		if length(best) < params["k"]
+			push!(best, [0])
+		end
+
+		voisins = SwapCircuitVoisins(best)
+
+		#Retirer les 0 les circuits contenant seulement 0 et de best (-1 car on rajouté 1 avant)
+		if length(best) - 1 < params["k"]
+
+			pop!(best)
+
+			for voisin in voisins
+				if length(voisin[end]) == 1
+					pop!(voisin)
+				end
+			end
+		end
+
+		#Appliquer la recherche locale de TSP
+		for voisin in voisins
+			voisin = TSPBoost(voisin, params, costs)
+		end
+
+		###Fin de création des voisins
+
+		noChange = true
+
+		#Trouver le meilleur voisin
+		for voisin in voisins
+			cost = getCircuitsCost(voisin, costs)
+
+			if cost < bestCost
+
+				bestCost = cost
+				best = voisin
+				noChange = false
+
+			end
+
+		end
+
+		if noChange
+			break
+		end
+
 	end
 
-	voisins = SwapCircuitVoisins(currentCircuits)
-
-	println(voisins)
+	return best
 
 end
 

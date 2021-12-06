@@ -11,9 +11,9 @@ include("PDI_heuristic_resolution.jl")
 
 #Instances A
 #INSTANCE_PATH = "../PRP_instances/A_014_#ABS1_15_1.prp"
-#INSTANCE_PATH = "../PRP_instances/A_050_ABS14_50_1.prp"
+INSTANCE_PATH = "../PRP_instances/A_050_ABS14_50_1.prp"
 #INSTANCE_PATH = "../PRP_instances/A_100_ABS5_100_4.prp"
-INSTANCE_PATH = "/Users/davidpinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp"
+#INSTANCE_PATH = "/Users/davidpinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp"
 #INSTANCE_PATH="/Users/davidpinaud/GitHub/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_050_ABS14_50_1.prp"
 
 #Instances B
@@ -80,6 +80,10 @@ end
 #=
 t: choisir le temps sur lequel tester
 choice: Choisir l'heuristique à utiliser
+metaChoice: Choisir la métaheuristique à utiliser (0 si aucune)
+
+showCircuits: Montrer ou non les circuits des heuristiques/métaheuristiques
+
 useLSP: Si vrai, appliquer d'abord le LSP pour obtenir les vrai valeur de VRP
 
 showMTZ:
@@ -88,14 +92,15 @@ showMTZ:
 	2: Montrer le circuit de MTZ
 	3: Ne montrer que MTZ et pas l'heuristique
 
+	ATTENTION: MTZ sur des instances de plus de 14 risque de prendre très longtemps
+
 heuristicExtraParam:
 	Paramètre en plus de ceux de base pour l'heuristique (Exemple l'angle pour sectorielle)
 
 =#
-function testHeuristicVRP(;t=1, choice=1, useLSP=false, showMTZ=0, heuristicExtraParam=[])
-	allHeuristic = [binPacking, clark_wright, sectorielleGuigui]
-
-	heuristic = allHeuristic[choice]
+function testHeuristicVRP(;t=1, choice=1, metaChoice=0, showCircuits=false, useLSP=false, showMTZ=0, heuristicExtraParam=[])
+	allHeuristic = [[binPacking, "Bin packing"], [clark_wright, "Clark-Wright"], [sectorielle, "Sectorielle"]]
+	allMetaheuristic = [[TSPBoost, "TSP Local search"], [mixMetaheuristic, "Mix Metaheuristic"]]
 
 	params, nodes, demands, costs = readPRP(INSTANCE_PATH)
 
@@ -131,11 +136,36 @@ function testHeuristicVRP(;t=1, choice=1, useLSP=false, showMTZ=0, heuristicExtr
 
 	end
 
-	circuits = heuristic(params, nodes, demands, costs, t, heuristicExtraParam...)
+	heuristic = allHeuristic[choice]
+
+	if choice < 3
+		heuristicExtraParam = []
+	end
+	circuits = heuristic[1](params, nodes, demands, costs, t, heuristicExtraParam...)
 	totalCost = getCircuitsCost(circuits, costs)
 
-	println("Heuristic circuits: ", circuits)
-	println("Circuits cost: ", totalCost)
+	if showCircuits
+		println("$(heuristic[2]) circuits: ", circuits)
+	end
+	
+	println("$(heuristic[2]) circuits cost: ", totalCost)
+
+
+	if metaChoice > 0
+		println()
+
+		metaheuristic = allMetaheuristic[metaChoice]
+
+		circuits = metaheuristic[1](circuits, params, costs)
+		totalCost = getCircuitsCost(circuits, costs)
+
+		if showCircuits
+			println("$(metaheuristic[2]) circuits: ", circuits)
+		end
+
+		println("$(metaheuristic[2]) circuits cost: ", totalCost)
+
+	end
 
 	#println()
 	# circuits = TSPBoost(circuits, costs)
@@ -145,7 +175,7 @@ function testHeuristicVRP(;t=1, choice=1, useLSP=false, showMTZ=0, heuristicExtr
 	# println("Circuits cost: ", totalCost)
 
 
-	#metaHeuristic(circuits, params, costs)
+
 
 end
 
@@ -154,7 +184,7 @@ end
 #testVRP_MTZ(true)
 
 #Nouvelle fonction qui réunis toutes les heuristique, le MTZ et le LSP
-#testHeuristicVRP(t=3, choice=3, heuristicExtraParam=[30], useLSP=false, showMTZ=0)
-testPDI_Bard_Nananukul(true)
+testHeuristicVRP(t=4, choice=3, metaChoice=2, showCircuits=false, useLSP=true, heuristicExtraParam=[30], showMTZ=0)
+#testPDI_Bard_Nananukul(true)
 
 
