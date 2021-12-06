@@ -9,7 +9,7 @@ function createLSP(params, nodes, demands, costs)
 
 	#= Paramètres (Constantes) du problème
 
-		demands[i][t] : d_{i,t}= demande du revendeur i au pas de temps t | i in [1,n], t in [0,l]=T 
+		demands[i][t] : d_{i,t}= demande du revendeur i au pas de temps t | i in [1,n], t in [1,l]=T 
 		nodes[i]["h"] : h_i = coût de stockage d'un produit pour le revendeur/fournisseur i | i in [0,n]
 		node[i]["L"] : L_i le stock maximal du revendeur/fournisseur i | i in [0,n]
 		params["u"] : u = coût de production d'un produit pour le fournisseur

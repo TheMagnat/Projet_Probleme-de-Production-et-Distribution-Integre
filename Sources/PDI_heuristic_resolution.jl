@@ -221,7 +221,3 @@ function PDI_heuristique(lsp_model, params, nodes, demands, costs, SC , fonction
     return lsp_model
 end
 
-
-INSTANCE_PATH = "/Users/davidpinaud/GitHub/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS83_15_4.prp"
-lsp_model, params, nodes, demands, costs, SC, fonctionObjInitial=initialisation_PDI_heuristique(INSTANCE_PATH)
-lsp_model=PDI_heuristique(lsp_model, params, nodes, demands, costs, SC, fonctionObjInitial, 10, false)
