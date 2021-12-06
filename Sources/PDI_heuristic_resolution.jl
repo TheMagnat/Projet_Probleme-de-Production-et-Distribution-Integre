@@ -159,7 +159,7 @@ function getSCfromVRPCircuits(vrp_circuits, SC, pasDeTemps, params, costs)
     return SC
 end
 
-function update_LSP(lsp_model,SC,fonctionObjInitial)
+function update_LSP(lsp_model,SC,fonctionObjInitial,params)
     fonctionObj=fonctionObjInitial
     for revendeur in 1:params["n"]
         for pasDeTemps in 1:params["l"]
@@ -216,7 +216,7 @@ function PDI_heuristique(lsp_model, params, nodes, demands, costs, SC , fonction
         end
         
         #mettre à jour les SC dans le modèle du LSP
-        update_LSP(lsp_model,SC,fonctionObjInitial)
+        update_LSP(lsp_model,SC,fonctionObjInitial,params)
         
     end
     return lsp_model
