@@ -12,28 +12,36 @@ function createPDI_Bard_Nananukul_compacte(params, nodes, demands, costs)
     model = Model(CPLEX.Optimizer)
     n = params["n"] #nombre de revendeur (exclu le fournisseur donc)
     m = params["k"] #nb de véhicules
-    l=params["l"] #nombre de pas de temps
+    l = params["l"] #nombre de pas de temps
     Q = params["Q"] #capacité d'un vahicule
-    C=params["C"] #production max du fournisseur à un certain pas de temps
-    u=params["u"] #coût de production d'une unité
-    f=params["f"] #coût de setup
+    C = params["C"] #production max du fournisseur à un certain pas de temps
+    u = params["u"] #coût de production d'une unité
+    f = params["f"] #coût de setup
 
     M=Dict(t=>min(C,sum(sum( demands[i,j] for i in 1:n) for j in t:l)) for t in 1:l )
     M_tilde=Dict((i,t)=> min( nodes[i]["L"], Q, sum(demands[i,j] for j in t:l) ) for i in 1:n,t in 1:l)
 
-    @variable(model,p[t=1:l]>=0) #(13)
+    @variable(model, p[t=1:l]>=0) #(13)
+
     @variable(model, I[0:n, 0:l] >= 0) #(13)
+    for i in 0:params["n"]
+        @constraint(model, I[i, 0] == nodes[i]["L0"])
+    end
+
     @variable(model, q[1:n, 1:l] >= 0) #(13)
     @variable(model, y[1:l], Bin) #(14)
+
     @variable(model, x[i=0:n, j=0:n,t=1:l], Bin) #(14)
     for i in 0:n, t in 1:l
         delete(model, x[i, i, t]) #on enlève les variables qui correspondent aux arêtes en trop (les (i, i))
     end
+
     @variable(model, z[i=1:n, t=1:l], Bin) #(15)
     @variable(model, 0 <= z0[ 0 , t=1:l ] <= m, Int) #(16) et (10) #ATTENTION IL Y A DEUX z À GERER: z0=z QUAND i=0 CAR JuMP NE NOUS LAISSE PAS INSTANCIER EN DEUX FOIS UNE VARIABLE, OR C'EST NECESSAIRE CAR LES z0 SONT DES ENTIERS POSITIFS ET LES z SONT DES NOMBRE BINAIRES
-    @variable(model,0<=w[i=1:n,t=1:l]) #(12 partie 1)
+    @variable(model, 0<=w[i=1:n,t=1:l]) #(12 partie 1)
 
     for t in 1:l
+
         @constraint(model, I[0, t-1] + p[t] == I[0, t] + sum(q[i, t] for i in 1:n)) #(2)
         @constraint(model, p[t] <= M[t] * y[t]) #(4)
         @constraint(model, I[0, t] <= nodes[0]["L"]) #(5)
@@ -64,6 +72,11 @@ function createPDI_Bard_Nananukul_compacte(params, nodes, demands, costs)
 
 end
 
+
+
+
+
+
 #=
 Formulation non compacte, la contrainte (29) contient 2^n inégalités
 =#
@@ -83,13 +96,20 @@ function createPDI_Boudia(params, nodes, demands, costs)
 
     
     @variable(model,p[t=1:l]>=0) #(31)
+
     @variable(model, I[0:n, 0:l] >= 0) #(31)
+    for i in 0:params["n"]
+        @constraint(model, I[i, 0] == nodes[i]["L0"])
+    end
+
     @variable(model, q[1:n, k=1:m, 1:l] >= 0) #(31)
     @variable(model, y[1:l], Bin) #(32)
+    
     @variable(model, x[i=0:n, j=0:n, k=1:m, t=1:l], Bin) #(32)
     for i in 0:n, t in 1:l, k=1:m
         delete(model, x[i, i, k, t]) #on enlève les variables qui correspondent aux arêtes en trop (les (i, i))
     end
+
     @variable(model, z[i=0:n, k=1:m, t=1:l], Bin) #(32)
     
     for t in 1:l
