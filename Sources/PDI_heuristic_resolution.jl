@@ -159,7 +159,7 @@ function getSCfromVRPCircuits(vrp_circuits, SC, pasDeTemps, params, costs)
     return SC
 end
 
-function update_LSP(lsp_model,SC,fonctionObjInitial)
+function update_LSP(lsp_model,SC,fonctionObjInitial,params)
     fonctionObj=fonctionObjInitial
     for revendeur in 1:params["n"]
         for pasDeTemps in 1:params["l"]
@@ -181,32 +181,33 @@ function PDI_heuristique(lsp_model, params, nodes, demands, costs, SC , fonction
         println("============================================================================SOLVING============================================================================\n\n\n")
         lsp_model=resolvePlne(lsp_model,2,"")
 
-        if(!resoudreVRPwithHeuristic)
-            #récuperer les VRP pour chaque pas de temps
-            vrp_models_et_parametres_en_fonction_du_pasDeTemps=getVRPfromLSP(lsp_model,params, nodes, demands, costs)
-        end
+        #récuperer les VRP pour chaque pas de temps
+        vrp_models_et_parametres_en_fonction_du_pasDeTemps=getVRPfromLSP(lsp_model,params, nodes, demands, costs)
+
         #résolution VRP à chaque pas de temps
         allCircuits=[]
         for pasDeTemps in 1:params["l"]
 
             #résoudre VRP
             if(resoudreVRPwithHeuristic) #si on fait avec l'heuristique clark wright
-                vrp_circuits=clark_wright(params, nodes, demands, costs, pasDeTemps)
+                vrp_model,(copyParams, copyNodes, copyQteALivrer, copyCost)=vrp_models_et_parametres_en_fonction_du_pasDeTemps[pasDeTemps]
+                vrp_circuits_temp=clark_wright(copyParams, copyNodes, copyQteALivrer, copyCost, pasDeTemps)
             else #si on fait une résolution exacte
                 #récuperer le VRP pour le pas de temps correspondant ainsi les params, nodes, demands, costs de ce VRP
                 vrp_model,(copyParams, copyNodes, copyQteALivrer, copyCost)=vrp_models_et_parametres_en_fonction_du_pasDeTemps[pasDeTemps]
-                #retrouver les indexOriginaux
-                originalIndexes=Dict(i-1 => e["initial_index"] for (i,e) in enumerate(copyNodes))
                 #résolution exacte de VRP
                 vrp_model=resolvePlne(vrp_model,0,"")
                 #prendre les circuits à partir du modèle de VRP, ils sont décrit avec les index locaux
                 vrp_circuits_temp=vrpToCircuit(vrp_model, copyParams)
-                #revenir aux index initiaux
-                vrp_circuits=[]
-                for circuit in vrp_circuits_temp
-                    circuit_with_Original_index=[originalIndexes[k] for k in circuit]
-                    push!(vrp_circuits,circuit_with_Original_index)
-                end
+            end
+
+            #retrouver les indexOriginaux
+            originalIndexes=Dict(i-1 => e["initial_index"] for (i,e) in enumerate(copyNodes))
+            #revenir aux index initiaux
+            vrp_circuits=[]
+            for circuit in vrp_circuits_temp
+                circuit_with_Original_index=[originalIndexes[k] for k in circuit]
+                push!(vrp_circuits,circuit_with_Original_index)
             end
             #prendre les SC_i,pasDeTemps depuis les circuits calculé dans le VRP
             if(empty!(vrp_circuits)==false)
@@ -215,7 +216,7 @@ function PDI_heuristique(lsp_model, params, nodes, demands, costs, SC , fonction
         end
         
         #mettre à jour les SC dans le modèle du LSP
-        update_LSP(lsp_model,SC,fonctionObjInitial)
+        update_LSP(lsp_model,SC,fonctionObjInitial,params)
         
     end
     return lsp_model
