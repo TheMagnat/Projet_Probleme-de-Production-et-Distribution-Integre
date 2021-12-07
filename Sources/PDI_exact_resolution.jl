@@ -1,5 +1,7 @@
 using JuMP
 using CPLEX
+using Combinatorics
+
 include("LSP_PLNE.jl")
 include("InstanceLoader.jl")
 include("ResolvePlne.jl")
@@ -56,3 +58,53 @@ function createPDI_Bard_Nananukul_compacte(params, nodes, demands, costs)
 
 end
 
+function createPDI_Boudia(params, nodes, demands, costs)
+    model = Model(CPLEX.Optimizer)
+    n = params["n"] #nombre de revendeur (exclu le fournisseur donc)
+    m = params["k"] #nb de véhicules
+    l=params["l"] #nombre de pas de temps
+    Q = params["Q"] #capacité d'un vahicule
+    C=params["C"] #production max du fournisseur à un certain pas de temps
+    u=params["u"] #coût de production d'une unité
+    f=params["f"] #coût de setup
+
+    M=Dict(t=>min(C,sum(sum( demands[i,j] for i in 1:n) for j in t:l)) for t in 1:l )
+    M_tilde=Dict((i,t)=> min( nodes[i]["L"], Q, sum(demands[i,j] for j in t:l) ) for i in 1:n,t in 1:l)
+
+    @variable(model,p[t=1:l]>=0) #(31)
+    @variable(model, I[0:n, 0:l] >= 0) #(31)
+    @variable(model, q[1:n, k=1:m, 1:l] >= 0) #(31)
+    @variable(model, y[1:l], Bin) #(32)
+    @variable(model, x[i=0:n, j=0:n, k=1:m, t=1:l], Bin) #(32)
+    @variable(model, z[i=0:n, k=1:m, t=1:l], Bin) #(32)
+    
+    for t in 1:l
+        @constraint(model, I[0,t-1]+p[t] == sum(sum(q[i,k,t]+I[0,t] for k in 1:m) for i in 1:n)) #(21)
+        @constraint(model,p[t]<=M[t]*y[t]) #(23)
+        @constraint(model, I[0,t]<=nodes[0]["L"]) #(24)
+        for i in 1:n
+            @constraint(model,I[i,t-1]+sum(q[i,k,t] for k in 1:m)==demands[i,t]+I[i,t]) #(22)
+            #@constraint(model, I[i,t-1]+sum(q[k,i,t] for k in 1:m)<=nodes[i]["L"]) #(25) #erreur sur le PDF ? 
+            @constraint(model, I[i,t-1]+sum(q[i,k,t] for k in 1:m)<=nodes[i]["L"]) #(25) 
+            @constraint(model,sum(z[i,k,t] for k in 1:m)<=1) #(27)
+            for k in 1:m
+                @constraint(model,q[i,k,t]<=M_tilde[i,t]*z[i,k,t]) #(26)
+                @constraint(model,sum(x[j,i,k,t] for j in 0:n)+sum(x[i,j,k,t] for j in 0:n)==2*z[i,k,t]) #(28 pour i>=1)
+            end
+        end
+    
+        for k in 1:m
+            @constraint(model,sum(x[j,0,k,t] for j in 0:n)+sum(x[0,j,k,t] for j in 0:n)==2*z[0,k,t]) #(28 pour i=0)
+            @constraint(model,sum(q[i,k,t] for i in 1:n)<=Q*z[0,k,t]) #(30)
+            for S in powerset(1:n, 2, n)
+                @constraint(model,sum(sum(x[i,j,k,t] for j in S) for i in S)<=length(S)-1) #(29)
+            end
+        end
+
+    end
+    
+    @objective(model,Min,sum(u*p[t]+f*y[t]+sum(nodes[i]["h"]*I[i,t] for i in 0:n)+sum(edgeCost*sum(x[i,j,k,t] for k in 1:m) for ((i,j),edgeCost) in costs) for t in 1:l)) #(20)
+
+    return model
+
+end
