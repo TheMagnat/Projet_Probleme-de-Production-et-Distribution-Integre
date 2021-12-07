@@ -37,7 +37,7 @@ function createPDI_Bard_Nananukul_compacte(params, nodes, demands, costs)
         @constraint(model, I[0, t-1] + p[t] == I[0, t] + sum(q[i, t] for i in 1:n)) #(2)
         @constraint(model, p[t] <= M[t] * y[t]) #(4)
         @constraint(model, I[0, t] <= nodes[0]["L"]) #(5)
-        @constraint(model,sum(x[j,0,t]+x[0,j,t] for j in 0:n)==2*z0[0,t]) #(9 que pour i=0)
+        @constraint(model,sum(x[j,0,t]+x[0,j,t] for j in 1:n)==2*z0[0,t]) #(9 que pour i=0)
 
         for i in 1:n
 			@constraint(model, I[i, t-1] + q[i, t] == demands[i, t] + I[i, t]) #(3)
@@ -77,7 +77,6 @@ function createPDI_Boudia(params, nodes, demands, costs)
     u=params["u"] #coût de production d'une unité
     f=params["f"] #coût de setup
     a=1
-    println("here a")
 
     M=Dict(t=>min(C,sum(sum( demands[i,j] for i in 1:n) for j in t:l)) for t in 1:l )
     M_tilde=Dict((i,t)=> min( nodes[i]["L"], Q, sum(demands[i,j] for j in t:l) ) for i in 1:n,t in 1:l)
@@ -93,7 +92,6 @@ function createPDI_Boudia(params, nodes, demands, costs)
     end
     @variable(model, z[i=0:n, k=1:m, t=1:l], Bin) #(32)
     
-    println("here a")
     for t in 1:l
         @constraint(model, I[0,t-1]+p[t] == sum(sum(q[i,k,t]+I[0,t] for k in 1:m) for i in 1:n)) #(21)
         @constraint(model,p[t]<=M[t]*y[t]) #(23)
@@ -109,22 +107,18 @@ function createPDI_Boudia(params, nodes, demands, costs)
                 @constraint(model,sum(x[j,i,k,t] for j in nodesIndexWithoutI)+sum(x[i,j,k,t] for j in nodesIndexWithoutI)==2*z[i,k,t]) #(28 pour i>=1)
             end
         end
-        println("here b")
 
     
         for k in 1:m
-            @constraint(model,sum(x[j,0,k,t] for j in 0:n)+sum(x[0,j,k,t] for j in 0:n)==2*z[0,k,t]) #(28 pour i=0)
+            @constraint(model,sum(x[j,0,k,t] for j in 0:n)+sum(x[0,j,k,t] for j in 1:n)==2*z[0,k,t]) #(28 pour i=0)
             @constraint(model,sum(q[i,k,t] for i in 1:n)<=Q*z[0,k,t]) #(30)
-            println("here c")
     
             for S in powerset(1:n, 2, n)
                 @constraint(model,sum(sum(x[i,j,k,t] for j in S) for i in S)<=length(S)-1) #(29)
             end
         end
-        println("here d")
 
     end
-    println("here e")
     @objective(model,Min,sum(u*p[t]+f*y[t]+sum(nodes[i]["h"]*I[i,t] for i in 0:n)+sum(edgeCost*sum(x[i,j,k,t] for k in 1:m) for ((i,j),edgeCost) in costs) for t in 1:l)) #(20)
 
     return model
