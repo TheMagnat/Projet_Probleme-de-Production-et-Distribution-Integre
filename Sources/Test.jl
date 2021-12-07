@@ -8,6 +8,7 @@ include("VRP_Heuristic.jl")
 include("Helper.jl")
 include("PDI_heuristic_resolution.jl")
 
+include("GraphHelper.jl")
 
 #Instances A
 #INSTANCE_PATH = "../PRP_instances/A_014_#ABS1_15_1.prp"
@@ -98,7 +99,7 @@ heuristicExtraParam:
 	Paramètre en plus de ceux de base pour l'heuristique (Exemple l'angle pour sectorielle)
 
 =#
-function testHeuristicVRP(;t=1, choice=1, metaChoice=0, showCircuits=false, useLSP=false, showMTZ=0, heuristicExtraParam=[])
+function testHeuristicVRP(;t=1, choice=1, metaChoice=0, showCircuits=false, useLSP=false, showMTZ=0, heuristicExtraParam=[], savePath="")
 	allHeuristic = [[binPacking, "Bin packing"], [clark_wright, "Clark-Wright"], [sectorielle, "Sectorielle"]]
 	allMetaheuristic = [[TSPBoost, "TSP Local search"], [mixMetaheuristic, "Mix Metaheuristic"]]
 
@@ -144,6 +145,7 @@ function testHeuristicVRP(;t=1, choice=1, metaChoice=0, showCircuits=false, useL
 	circuits = heuristic[1](params, nodes, demands, costs, t, heuristicExtraParam...)
 	totalCost = getCircuitsCost(circuits, costs)
 
+
 	if showCircuits
 		println("$(heuristic[2]) circuits: ", circuits)
 	end
@@ -167,15 +169,9 @@ function testHeuristicVRP(;t=1, choice=1, metaChoice=0, showCircuits=false, useL
 
 	end
 
-	#println()
-	# circuits = TSPBoost(circuits, costs)
-	# totalCost = getCircuitsCost(circuits, costs)
-
-	# println("Heuristic with TSP Neighborhood circuits: ", circuits)
-	# println("Circuits cost: ", totalCost)
-
-
-
+	if length(savePath) > 0
+		saveCircuits(params, circuits, savePath)
+	end
 
 end
 
@@ -184,7 +180,7 @@ end
 #testVRP_MTZ(true)
 
 #Nouvelle fonction qui réunis toutes les heuristique, le MTZ et le LSP
-testHeuristicVRP(t=4, choice=3, metaChoice=2, showCircuits=false, useLSP=true, heuristicExtraParam=[30], showMTZ=0)
+testHeuristicVRP(t=2, choice=3, metaChoice=2, showCircuits=false, useLSP=false, heuristicExtraParam=[30], showMTZ=0, savePath="../Save/test.png")
 #testPDI_Bard_Nananukul(true)
 
 
