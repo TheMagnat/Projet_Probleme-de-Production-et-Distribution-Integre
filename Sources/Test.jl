@@ -11,10 +11,10 @@ include("PDI_heuristic_resolution.jl")
 include("GraphHelper.jl")
 
 #Instances A
-#INSTANCE_PATH = "./PRP_instances/A_014_#ABS1_15_1.prp"
-#INSTANCE_PATH = "./PRP_instances/A_050_ABS14_50_1.prp"
-#INSTANCE_PATH = "./PRP_instances/A_100_ABS5_100_4.prp"
-INSTANCE_PATH = "/Users/davidpinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp"
+#INSTANCE_PATH = "../PRP_instances/A_014_#ABS1_15_1.prp"
+#INSTANCE_PATH = "../PRP_instances/A_050_ABS14_50_1.prp"
+INSTANCE_PATH = "../PRP_instances/A_100_ABS5_100_4.prp"
+#INSTANCE_PATH = "/Users/davidpinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp"
 #INSTANCE_PATH="/Users/davidpinaud/GitHub/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_050_ABS14_50_1.prp"
 
 #Instances B
@@ -193,8 +193,8 @@ end
 
 #testHeuristicVRP(t=2, choice=3, metaChoice=2, showCircuits=false, useLSP=false, heuristicExtraParam=[30], showMTZ=0, savePath="../Save/test.png")
 
-#testHeuristicVRP(t=4, choice=3, metaChoice=2, showCircuits=false, useLSP=true, heuristicExtraParam=[30], showMTZ=0)
+testHeuristicVRP(t=4, choice=2, metaChoice=1, showCircuits=false, useLSP=false, heuristicExtraParam=[30], showMTZ=0, savePath="../Save/test.png")
 #testPDI_heuristique()
 
 #testPDI_Boudia(true)
-testPDI_Bard_Nananukul(true,2)
+#testPDI_Bard_Nananukul(true,2)
