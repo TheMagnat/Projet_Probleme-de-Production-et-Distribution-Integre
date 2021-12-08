@@ -8,7 +8,7 @@ function getCircuitCost(circuit, costs)
 	for (from, to) in zip(circuit[1:end-1], circuit[2:end])
 		cost += costs[(from, to)]
 	end
-
+	
 	cost += costs[circuit[1], circuit[end]]
 
 	return cost
@@ -46,7 +46,7 @@ function vrpToCircuit(model, params, isPDI=false, t=1)
 
 	for i in 1:params["n"]
 		#On cherche tout les chemin commençant en 0 (Début de circuit)
-		if value(variable_by_name(model, "x[0,$i" * endString)) > 0
+		if round(value(variable_by_name(model, "x[0,$i" * endString))) > 0
 
 			circuit = [0]
 			#from deviant le premier noeud après 0 du circuit
@@ -62,7 +62,7 @@ function vrpToCircuit(model, params, isPDI=false, t=1)
 					if i != from
 
 						#...On cherche le noeud suivant from...
-						if value(variable_by_name(model, "x[$from,$i" * endString)) > 0
+						if round(value(variable_by_name(model, "x[$from,$i" * endString))) > 0
 							#...Et ce noeud devient from
 							from = i
 							break

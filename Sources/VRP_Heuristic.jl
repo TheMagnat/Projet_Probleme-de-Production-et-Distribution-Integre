@@ -328,6 +328,11 @@ function SwapCircuitVoisins(circuits)
 					deleteat!(voisin[i], j)
 					push!(voisin[indexCircuit], elem)
 
+					#If only zero remain in i
+					if length(voisin[i]) == 1
+						deleteat!(voisin, i)
+					end
+
 					push!(voisins, voisin)
 				end
 			end
@@ -385,10 +390,12 @@ function mixMetaheuristic(circuits, params, costs)
 					pop!(voisin)
 				end
 			end
+
 		end
 
 		#Appliquer la recherche locale de TSP
 		for voisin in voisins
+
 			voisin = TSPBoost(voisin, params, costs)
 		end
 

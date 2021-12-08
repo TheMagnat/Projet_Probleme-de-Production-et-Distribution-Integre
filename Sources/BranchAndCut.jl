@@ -3,23 +3,14 @@ include("PDI_exact_resolution.jl")
 
 include("InstanceLoader.jl")
 include("Helper.jl")
+include("GraphHelper.jl")
 
 INSTANCE_PATH = "../PRP_instances/A_014_#ABS1_15_1.prp"
 #INSTANCE_PATH = "../PRP_instances/A_050_ABS14_50_1.prp"
 
-function BranchAndCutPDI()
-
-	params, nodes, demands, costs = readPRP(INSTANCE_PATH)
+function BranchAndCutPDI(params, nodes, demands, costs)
 
 	model = createPDI_Bard_Nananukul_compacte(params, nodes, demands, costs)
-
-
-	# function userSep(c_data)
-	# 	#x[i=0:n, j=0:n,t=1:l]
-	# 	println("#############")
-	# 	println(callback_value(c_data, variable_by_name(model, "z0[0,5]")))
-	# 	println("#############")
-	# end
 
 
 	function lazySep(c_data)
@@ -100,21 +91,20 @@ function BranchAndCutPDI()
 				setNotInSousTour = setdiff(fullSet, sousTour)
 
 				#FCCs
-				con = @build_constraint(Q * sum( variable_by_name(model, "x[$i,$j,$t]") for i in setNotInSousTour, j in sousTour) >= sum( variable_by_name(model, "q[$i,$t]") for i in sousTour) )
+				con = @build_constraint(sum( variable_by_name(model, "x[$i,$j,$t]") for i in setNotInSousTour, j in sousTour) >= sum( variable_by_name(model, "q[$i,$t]") for i in sousTour)/Q )
 				MOI.submit(model, MOI.LazyConstraint(c_data), con)
 
-				#TEST
-				#con = @build_constraint(sum( variable_by_name(model, "x[$i,$j,$t]") for i in setNotInSousTour, j in sousTour) >= sum( variable_by_name(model, "q[$i,$t]") for i in sousTour)/Q )
+				#FCCs Reversed Q
+				#con = @build_constraint(Q * sum( variable_by_name(model, "x[$i,$j,$t]") for i in setNotInSousTour, j in sousTour) >= sum( variable_by_name(model, "q[$i,$t]") for i in sousTour) )
 				#MOI.submit(model, MOI.LazyConstraint(c_data), con)
 
 				#GFSECs
 				#con = @build_constraint(sum( i != j ? variable_by_name(model, "x[$i,$j,$t]") : 0 for i in sousTour, j in sousTour) <= length(sousTour) - sum( variable_by_name(model, "q[$i,$t]") for i in sousTour)/Q )
 				#MOI.submit(model, MOI.LazyConstraint(c_data), con)
 
-				#GFSECs by Adulyasak
+				#GFSECs Reversed Q by Adulyasak
 				#con = @build_constraint( Q * sum( i != j ? variable_by_name(model, "x[$i,$j,$t]") : 0 for i in sousTour, j in sousTour) <= sum(Q*variable_by_name(model, "z[$i,$t]") - variable_by_name(model, "q[$i,$t]") for i in sousTour) )
 				#MOI.submit(model, MOI.LazyConstraint(c_data), con)
-
 
 
 				#Pour user cut
@@ -124,7 +114,8 @@ function BranchAndCutPDI()
 		end
 	end
 
-
+	#Mauvais algorithme
+	#=
 	function userSep(c_data)
 
 		n = params["n"]
@@ -214,41 +205,38 @@ function BranchAndCutPDI()
 				#Set sans le sous tour
 				setNotInSousTour = setdiff(fullSet, sousTour)
 
-				con = @build_constraint(sum( variable_by_name(model, "x[$i,$j,$t]") for i in setNotInSousTour, j in sousTour) >= sum( variable_by_name(model, "q[$i,$t]") for i in sousTour)/Q )
+				#con = @build_constraint(sum( variable_by_name(model, "x[$i,$j,$t]") for i in setNotInSousTour, j in sousTour) >= sum( variable_by_name(model, "q[$i,$t]") for i in sousTour)/Q )
+				#MOI.submit(model, MOI.UserCut(c_data), con)
+
+				con = @build_constraint( Q * sum( i != j ? variable_by_name(model, "x[$i,$j,$t]") : 0 for i in sousTour, j in sousTour) <= sum(Q*variable_by_name(model, "z[$i,$t]") - variable_by_name(model, "q[$i,$t]") for i in sousTour) )
+				MOI.submit(model, MOI.UserCut(c_data), con)
 				
-				MOI.submit(model, MOI.UserCut(c_data), con) 
 			end
 
 		end
 
 	end
+	=#
 
 	# our userSep_ViolatedAcyclicCst function sets a LazyConstraintCallback of CPLEX   
 	MOI.set(model, MOI.LazyConstraintCallback(), lazySep)
+
 	#MOI.set(model, MOI.UserCutCallback(), userSep)
 
 	optimize!(model)
-	println("optimum = ", objective_value(model))
 
-	for i in 1:params["l"]
-		println("z0[0,$i] ", value(variable_by_name(model, "z0[0,$i]")))
+	return model
+end
+
+
+function PDItoCircuits(model, params, nodes, demands, costs)
+
+	allCircuits = []
+
+	for t in 1:params["l"]
+		push!(allCircuits, vrpToCircuit(model, params, true, t))
 	end
 
-	#40346.0
-	#vrpToCircuit(model, params)
+	return allCircuits
 
-	# for i=0:params["n"], j=0:params["n"], t=1:l
-	# 	println("x[$i,$j,$t] ", value(variable_by_name(model, "x[$i,$j,$t]")))
-	# end
-	return model, params
 end
-
-
-model, params = BranchAndCutPDI()
-allCircuits = []
-
-for t in 1:params["l"]
-	push!(allCircuits, vrpToCircuit(model, params, true, t))
-end
-
-saveMultiCircuits(params, allCircuits, "test2.png")
