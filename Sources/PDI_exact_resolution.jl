@@ -38,14 +38,15 @@ function createPDI_Bard_Nananukul_compacte(params, nodes, demands, costs)
 
     @variable(model, z[i=1:n, t=1:l], Bin) #(15)
     @variable(model, 0 <= z0[ 0 , t=1:l ] <= m, Int) #(16) et (10) #ATTENTION IL Y A DEUX z À GERER: z0=z QUAND i=0 CAR JuMP NE NOUS LAISSE PAS INSTANCIER EN DEUX FOIS UNE VARIABLE, OR C'EST NECESSAIRE CAR LES z0 SONT DES ENTIERS POSITIFS ET LES z SONT DES NOMBRE BINAIRES
-    @variable(model, 0<=w[i=1:n,t=1:l]) #(12 partie 1)
+    # @variable(model, 0<=w[i=1:n,t=1:l]) #(12 partie 1)
 
     for t in 1:l
 
         @constraint(model, I[0, t-1] + p[t] == I[0, t] + sum(q[i, t] for i in 1:n)) #(2)
         @constraint(model, p[t] <= M[t] * y[t]) #(4)
         @constraint(model, I[0, t] <= nodes[0]["L"]) #(5)
-        @constraint(model,sum(x[j,0,t]+x[0,j,t] for j in 1:n)==2*z0[0,t]) #(9 que pour i=0)
+
+        @constraint(model, sum( x[j,0,t] + x[0,j,t] for j in 1:n ) == 2*z0[0,t]) #(9 que pour i=0)
 
         for i in 1:n
 			@constraint(model, I[i, t-1] + q[i, t] == demands[i, t] + I[i, t]) #(3)
@@ -53,17 +54,17 @@ function createPDI_Bard_Nananukul_compacte(params, nodes, demands, costs)
             @constraint(model,q[i,t]<=M_tilde[i,t]*z[i,t]) #(7) la qté à livrer ne peut être positive que si on visite le noeud à ce pas de temps et ne doit pas dépasser la capacité d'un seul véhicule (un noeud n'est servi que par un seul véhicule) 
 
             nodesIndexWithoutI = filter(e -> e != i, 0:n)
-            @constraint(model, sum(x[i,j,t] for j in nodesIndexWithoutI)==z[i,t]) #(8)
-            @constraint(model,sum(x[j,i,t]+x[i,j,t] for j in nodesIndexWithoutI)==2*z[i,t]) #(9 avec i in 1:n)
+            @constraint(model, sum( x[i,j,t] for j in nodesIndexWithoutI ) == z[i,t]) #(8)
+            @constraint(model, sum( x[j,i,t] + x[i,j,t] for j in nodesIndexWithoutI ) == 2*z[i,t]) #(9 avec i in 1:n)
 
-            @constraint(model,w[i , t] <= Q*z[i,t]) # (12 partie 2)
+            # @constraint(model,w[i , t] <= Q*z[i,t]) # (12 partie 2)
 		end
 
-        for ((i,j),edgeCost) in costs
-            if(i!=0 && j!=0)
-                @constraint(model,w[i,t]-w[j,t]>=q[i,t]-M_tilde[i,t]*(1-x[i,j,t])) #(11)
-            end
-        end
+        # for ((i,j),edgeCost) in costs
+        #     if(i!=0 && j!=0)
+        #         @constraint(model,w[i,t]-w[j,t]>=q[i,t]-M_tilde[i,t]*(1-x[i,j,t])) #(11)
+        #     end
+        # end
     end
 
     @objective(model,Min,sum(u*p[t]+f*y[t]+sum(nodes[i]["h"]*I[i,t] for i in 0:n)+sum(edgeCost*x[i,j,t] for ((i,j),edgeCost) in costs) for t in 1:l)) #(1)
@@ -104,7 +105,7 @@ function createPDI_Boudia(params, nodes, demands, costs)
 
     @variable(model, q[1:n, k=1:m, 1:l] >= 0) #(31)
     @variable(model, y[1:l], Bin) #(32)
-    
+
     @variable(model, x[i=0:n, j=0:n, k=1:m, t=1:l], Bin) #(32)
     for i in 0:n, t in 1:l, k=1:m
         delete(model, x[i, i, k, t]) #on enlève les variables qui correspondent aux arêtes en trop (les (i, i))
