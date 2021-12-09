@@ -118,15 +118,6 @@ function callBranchAndCut(instances)
     end
 end
 
-function evaluatePDI_BranchAndCut(nbA14 = 30, nbA50 = 3, nbA100 = 0, nbB50 = 0, nbB100 = 0, nbB200 = 0) #time limit de 3h pour chaque instance
-    allInstances = getSelectedInstances(nbA14, nbA50, nbA100, nbB50, nbB100, nbB200)
-    for instances in allInstances
-        if length(instances)!=0
-            callBranchAndCut(instances)
-        end
-    end
-end
-
 function callVRPHeuristic_and_Exact(instances)
     for instance in instances
         #get the instance
@@ -150,7 +141,13 @@ function callVRPHeuristic_and_Exact(instances)
         for t in 1:params["l"]
             #save the heuristic's circuit
             circuits_temps_t_heuristique = mixMetaheuristic(clark_wright(params, nodes, demands, costs,t),params,costs)
-            isRealisable=length(circuits_temps_t_heuristique)<=params["k"]
+            isRealisable=true
+            for circuit in circuits_temps_t_heuristique
+                isRealisable=isRealisable&&length(circuit)<=params["k"]
+                if !isRealisable
+                    break
+                end
+            end
             write(file_heuristique, "$t\t$isRealisable\t$(circuits_temps_t_heuristique)\n")
 
             #save the VRP's circuits
@@ -192,6 +189,65 @@ function callVRPHeuristic_and_Exact(instances)
     end
 end
 
+function callPDIHeuristic(instances,nbMaxIte, resoudreVRPwithHeuristic)
+    for instance in instances
+        for instance in instances
+            #get the instance
+            lsp_model, params, nodes, demands, costs, SC, fonctionObjInitial=initialisation_PDI_heuristique(INSTANCE_PATH)
+    
+            #Optimize
+            model=PDI_heuristique(lsp_model, params, nodes, demands, costs, SC, fonctionObjInitial, nbMaxIte, resoudreVRPwithHeuristic)
+    
+            #create the directory
+            timestamp = Dates.format(now(), "YYYYmmdd-HHMMSS")
+            name = first(split(last(split(instance, "/")), "."))
+            dir_name = joinpath(@__DIR__,"evaluations","Branch&Cut_Heuristic_$(name)_" * "$timestamp")
+            @assert !ispath(dir_name) "Somebody else already created the directory"
+            mkpath(dir_name)
+    
+            #save the circuits
+            allCircuits = PDItoCircuits(model, params, nodes, demands, costs)
+            saveMultiCircuits(params, allCircuits, dir_name * "/all_circuits.png")
+    
+            #save the model
+            #write_to_file(model, dir_name * "/model_$(name).mps")
+            towrite=["solver_name",solver_name(model),"\ntermination_status :",
+            termination_status(model),"\nprimal_status :",
+            primal_status(model),"\ndual_status :",
+            dual_status(model),"\nraw_status :",
+            raw_status(model),"\nresult_count :",
+            result_count(model),"\nhas_values :",
+            has_values(model),"\nhas_duals :",
+            has_duals(model),"\nobjective_value :",
+            _try_get(objective_value, model),"\nobjective_bound :",
+            _try_get(objective_bound, model),"\ndual_objective_value :",
+            _try_get(dual_objective_value, model),"\nSolutions :",
+            _get_solution_dict(model),"\nConstraints :",
+            _get_constraint_dict(model),"\nsolve_time :",
+            _try_get(solve_time, model),"\nsimplex_iterations :",
+            _try_get(simplex_iterations, model),"\nbarrier_iterations :",
+            _try_get(barrier_iterations, model),"\nnode_count :",
+            _try_get(node_count, model)]
+            s=""
+            for w in towrite
+                s=s*string(w)*"\n"
+            end
+            file = open(dir_name *"/resume_exec_$(name).txt", "w")
+            write(file, s)
+            close(file) 
+        end
+    end
+end
+
+function evaluatePDI_BranchAndCut(nbA14 = 30, nbA50 = 3, nbA100 = 0, nbB50 = 0, nbB100 = 0, nbB200 = 0) #time limit de 3h pour chaque instance
+    allInstances = getSelectedInstances(nbA14, nbA50, nbA100, nbB50, nbB100, nbB200)
+    for instances in allInstances
+        if length(instances)!=0
+            callBranchAndCut(instances)
+        end
+    end
+end
+
 function evaluateVRP_Heuristique_and_Exact(nbA14 = 10, nbA50 = 2, nbA100 = 0, nbB50 = 0, nbB100 = 0, nbB200 = 0)
     allInstances = getSelectedInstances(nbA14, nbA50, nbA100, nbB50, nbB100, nbB200)
     for instances in allInstances
@@ -200,9 +256,18 @@ function evaluateVRP_Heuristique_and_Exact(nbA14 = 10, nbA50 = 2, nbA100 = 0, nb
 end
 
 
-#evaluatePDI_BranchAndCut(20,0,0,0,0,0)
-evaluateVRP_Heuristique_and_Exact()
+function evaluatePDI_heuristique(nbA14 = 10, nbA50 = 0, nbA100 = 0, nbB50 = 0, nbB100 = 0, nbB200 = 0, nbMaxIte=3, resoudreVRPwithHeuristic=true)
+    allInstances = getSelectedInstances(nbA14, nbA50, nbA100, nbB50, nbB100, nbB200)
+    for instances in allInstances
+        callPDIHeuristic(instances,nbMaxIte, resoudreVRPwithHeuristic)
+    end
+end
 
+
+
+#evaluatePDI_BranchAndCut(20,0,0,0,0,0)
+#evaluateVRP_Heuristique_and_Exact()
+evaluatePDI_heuristique()
 #= TODO : 
 1 - Comparer en terme de vitesse et en fitness sur des instances de tailles différentes: 
     - la résolution de VRP avec

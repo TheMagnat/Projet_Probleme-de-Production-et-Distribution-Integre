@@ -191,7 +191,8 @@ function PDI_heuristique(lsp_model, params, nodes, demands, costs, SC , fonction
             #résoudre VRP
             if(resoudreVRPwithHeuristic) #si on fait avec l'heuristique clark wright
                 vrp_model,(copyParams, copyNodes, copyQteALivrer, copyCost)=vrp_models_et_parametres_en_fonction_du_pasDeTemps[pasDeTemps]
-                vrp_circuits_temp=clark_wright(copyParams, copyNodes, copyQteALivrer, copyCost, pasDeTemps)
+                #vrp_circuits_temp=clark_wright(copyParams, copyNodes, copyQteALivrer, copyCost, pasDeTemps)
+                vrp_circuits_temp=mixMetaheuristic(clark_wright(copyParams, copyNodes, copyQteALivrer, copyCost, pasDeTemps),copyParams,copyCost)
             else #si on fait une résolution exacte
                 #récuperer le VRP pour le pas de temps correspondant ainsi les params, nodes, demands, costs de ce VRP
                 vrp_model,(copyParams, copyNodes, copyQteALivrer, copyCost)=vrp_models_et_parametres_en_fonction_du_pasDeTemps[pasDeTemps]
