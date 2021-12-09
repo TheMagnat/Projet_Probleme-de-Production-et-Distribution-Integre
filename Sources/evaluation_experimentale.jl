@@ -127,7 +127,7 @@ function evaluatePDI_BranchAndCut(nbA14 = 30, nbA50 = 3, nbA100 = 0, nbB50 = 0, 
     end
 end
 
-evaluatePDI_BranchAndCut(0,3,0,0,0,0)
+evaluatePDI_BranchAndCut(20,0,0,0,0,0)
 
 #= TODO : 
 1 - Comparer en terme de vitesse et en fitness sur des instances de tailles différentes: 
