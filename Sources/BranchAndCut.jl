@@ -91,21 +91,25 @@ function BranchAndCutPDI(params, nodes, demands, costs)
 				setNotInSousTour = setdiff(fullSet, sousTour)
 
 				#FCCs
-				con = @build_constraint(sum( variable_by_name(model, "x[$i,$j,$t]") for i in setNotInSousTour, j in sousTour) >= sum( variable_by_name(model, "q[$i,$t]") for i in sousTour)/Q )
-				MOI.submit(model, MOI.LazyConstraint(c_data), con)
+				if length(sousTour)>=1
+					con = @build_constraint(sum( variable_by_name(model, "x[$i,$j,$t]") for i in setNotInSousTour, j in sousTour) >= sum( variable_by_name(model, "q[$i,$t]") for i in sousTour)/Q )
+					MOI.submit(model, MOI.LazyConstraint(c_data), con)
+				end
 
 				#FCCs Reversed Q
 				#con = @build_constraint(Q * sum( variable_by_name(model, "x[$i,$j,$t]") for i in setNotInSousTour, j in sousTour) >= sum( variable_by_name(model, "q[$i,$t]") for i in sousTour) )
 				#MOI.submit(model, MOI.LazyConstraint(c_data), con)
 
 				#GFSECs
-				#con = @build_constraint(sum( i != j ? variable_by_name(model, "x[$i,$j,$t]") : 0 for i in sousTour, j in sousTour) <= length(sousTour) - sum( variable_by_name(model, "q[$i,$t]") for i in sousTour)/Q )
-				#MOI.submit(model, MOI.LazyConstraint(c_data), con)
-
+				#if length(sousTour)>=2
+					#con = @build_constraint(sum( i != j ? variable_by_name(model, "x[$i,$j,$t]") : 0 for i in sousTour, j in sousTour) <= length(sousTour) - sum( variable_by_name(model, "q[$i,$t]") for i in sousTour)/Q )
+					#MOI.submit(model, MOI.LazyConstraint(c_data), con)
+				#end
 				#GFSECs Reversed Q by Adulyasak
+				#if length(sousTour)>=2
 				#con = @build_constraint( Q * sum( i != j ? variable_by_name(model, "x[$i,$j,$t]") : 0 for i in sousTour, j in sousTour) <= sum(Q*variable_by_name(model, "z[$i,$t]") - variable_by_name(model, "q[$i,$t]") for i in sousTour) )
 				#MOI.submit(model, MOI.LazyConstraint(c_data), con)
-
+				#end
 
 				#Pour user cut
 				#MOI.submit(LP, MOI.UserCut(cb_data), con) 
@@ -222,7 +226,7 @@ function BranchAndCutPDI(params, nodes, demands, costs)
 	MOI.set(model, MOI.LazyConstraintCallback(), lazySep)
 
 	#MOI.set(model, MOI.UserCutCallback(), userSep)
-
+	set_time_limit_sec(model,10800) #time limit de 3h
 	optimize!(model)
 
 	return model
