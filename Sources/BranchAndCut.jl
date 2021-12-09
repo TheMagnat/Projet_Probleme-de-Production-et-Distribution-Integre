@@ -226,7 +226,7 @@ function BranchAndCutPDI(params, nodes, demands, costs)
 	MOI.set(model, MOI.LazyConstraintCallback(), lazySep)
 
 	#MOI.set(model, MOI.UserCutCallback(), userSep)
-	set_time_limit_sec(model,10800) #time limit de 3h
+	#set_time_limit_sec(model,10800) #time limit de 3h
 	optimize!(model)
 
 	return model
