@@ -1,5 +1,5 @@
-
 using StatsBase
+include("VRP_Heuristic.jl")
 include("BranchAndCut.jl")
 
 function getAllInstancesPath(directory = "./PRP_instances")
@@ -127,7 +127,81 @@ function evaluatePDI_BranchAndCut(nbA14 = 30, nbA50 = 3, nbA100 = 0, nbB50 = 0, 
     end
 end
 
-evaluatePDI_BranchAndCut(20,0,0,0,0,0)
+function callVRPHeuristic_and_Exact(instances)
+    for instance in instances
+        #get the instance
+        params, nodes, demands, costs = readPRP(instance)
+
+        #create the directory
+        timestamp = Dates.format(now(), "YYYYmmdd-HHMMSS")
+        name = first(split(last(split(instance, "/")), "."))
+        dir_name = joinpath(@__DIR__,"evaluations","VRPHeuristic_and_Exact$(name)_" * "$timestamp")
+        @assert !ispath(dir_name) "Somebody else already created the directory"
+        mkpath(dir_name)
+
+        #open the files
+        file_heuristique = open(dir_name *"/circuits_de_clarkWright$(name).txt", "w")
+        file_VRP = open(dir_name *"/circuits_de_VRP$(name).txt", "w")
+        file_model=open(dir_name *"/all_models_de_VRP$(name).txt", "w")
+	    write(file_heuristique, "t\trealisable\tcircuit\n")
+        write(file_VRP, "t\trealisable\tcircuit\n")
+
+        #get the circuits from metaheuristic and VRP for all time steps and save the model for all time steps
+        for t in 1:params["l"]
+            #save the heuristic's circuit
+            circuits_temps_t_heuristique = mixMetaheuristic(clark_wright(params, nodes, demands, costs,t),params,costs)
+            isRealisable=length(circuits_temps_t_heuristique)<=params["k"]
+            write(file_heuristique, "$t\t$isRealisable\t$(circuits_temps_t_heuristique)\n")
+
+            #save the VRP's circuits
+            model = createVRP_MTZ(params, nodes, demands, costs, t)
+            optimize!(model)
+            circuits_temps_t_VRP =vrpToCircuit(model, params, false, t)
+            isRealisabl_VRPe=length(circuits_temps_t_VRP)<=params["k"]
+            write(file_VRP, "$t\t$isRealisabl_VRPe\t$(circuits_temps_t_VRP)\n")
+            
+            #save the model
+            towrite=["solver_name",solver_name(model),"\ntermination_status :",
+            termination_status(model),"\nprimal_status :",
+            primal_status(model),"\ndual_status :",
+            dual_status(model),"\nraw_status :",
+            raw_status(model),"\nresult_count :",
+            result_count(model),"\nhas_values :",
+            has_values(model),"\nhas_duals :",
+            has_duals(model),"\nobjective_value :",
+            _try_get(objective_value, model),"\nobjective_bound :",
+            _try_get(objective_bound, model),"\ndual_objective_value :",
+            _try_get(dual_objective_value, model),"\nSolutions :",
+            _get_solution_dict(model),"\nConstraints :",
+            _get_constraint_dict(model),"\nsolve_time :",
+            _try_get(solve_time, model),"\nsimplex_iterations :",
+            _try_get(simplex_iterations, model),"\nbarrier_iterations :",
+            _try_get(barrier_iterations, model),"\nnode_count :",
+            _try_get(node_count, model)]
+            s="\n#$t\n"
+            for w in towrite
+                s=s*string(w)*"\n"
+            end
+            write(file_model,s)
+        end
+        
+	    close(file_heuristique)
+        close(file_VRP)
+        close(file_model)
+
+    end
+end
+
+function evaluateVRP_Heuristique_and_Exact(nbA14 = 10, nbA50 = 2, nbA100 = 0, nbB50 = 0, nbB100 = 0, nbB200 = 0)
+    allInstances = getSelectedInstances(nbA14, nbA50, nbA100, nbB50, nbB100, nbB200)
+    for instances in allInstances
+        callVRPHeuristic_and_Exact(instances)
+    end
+end
+
+
+#evaluatePDI_BranchAndCut(20,0,0,0,0,0)
+evaluateVRP_Heuristique_and_Exact()
 
 #= TODO : 
 1 - Comparer en terme de vitesse et en fitness sur des instances de tailles différentes: 
