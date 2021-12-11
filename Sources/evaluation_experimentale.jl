@@ -1,5 +1,6 @@
 using StatsBase
 include("VRP_Heuristic.jl")
+include("PDI_heuristic_resolution.jl")
 include("BranchAndCut.jl")
 
 function getAllInstancesPath(directory = "./PRP_instances")
@@ -193,21 +194,25 @@ function callPDIHeuristic(instances,nbMaxIte, resoudreVRPwithHeuristic)
     for instance in instances
         for instance in instances
             #get the instance
-            lsp_model, params, nodes, demands, costs, SC, fonctionObjInitial=initialisation_PDI_heuristique(INSTANCE_PATH)
+            lsp_model, params, nodes, demands, costs, SC, fonctionObjInitial=initialisation_PDI_heuristique(instance)
     
             #Optimize
-            model=PDI_heuristique(lsp_model, params, nodes, demands, costs, SC, fonctionObjInitial, nbMaxIte, resoudreVRPwithHeuristic)
+            model,circuits=PDI_heuristique(lsp_model, params, nodes, demands, costs, SC, fonctionObjInitial, nbMaxIte, resoudreVRPwithHeuristic)
     
             #create the directory
             timestamp = Dates.format(now(), "YYYYmmdd-HHMMSS")
             name = first(split(last(split(instance, "/")), "."))
-            dir_name = joinpath(@__DIR__,"evaluations","Branch&Cut_Heuristic_$(name)_" * "$timestamp")
+            withVRP=resoudreVRPwithHeuristic ? "" : "withVRP"
+            dir_name = joinpath(@__DIR__,"evaluations","Branch&Cut_Heuristic_$(withVRP)_$(name)_" * "$timestamp")
             @assert !ispath(dir_name) "Somebody else already created the directory"
             mkpath(dir_name)
     
             #save the circuits
-            allCircuits = PDItoCircuits(model, params, nodes, demands, costs)
-            saveMultiCircuits(params, allCircuits, dir_name * "/all_circuits.png")
+            circuits_list=[[] for i in 1:length(circuits)]
+            for (i,circuit) in circuits
+                circuits_list[i]=circuit
+            end
+            saveMultiCircuits(params, circuits_list, dir_name * "/all_circuits.png")
     
             #save the model
             #write_to_file(model, dir_name * "/model_$(name).mps")
@@ -239,7 +244,7 @@ function callPDIHeuristic(instances,nbMaxIte, resoudreVRPwithHeuristic)
     end
 end
 
-function evaluatePDI_BranchAndCut(nbA14 = 30, nbA50 = 3, nbA100 = 0, nbB50 = 0, nbB100 = 0, nbB200 = 0) #time limit de 3h pour chaque instance
+function evaluatePDI_BranchAndCut(nbA14 = 30, nbA50 = 30, nbA100 = 10, nbB50 = 0, nbB100 = 0, nbB200 = 0) #time limit de 3h pour chaque instance
     allInstances = getSelectedInstances(nbA14, nbA50, nbA100, nbB50, nbB100, nbB200)
     for instances in allInstances
         if length(instances)!=0
@@ -256,7 +261,7 @@ function evaluateVRP_Heuristique_and_Exact(nbA14 = 10, nbA50 = 2, nbA100 = 0, nb
 end
 
 
-function evaluatePDI_heuristique(nbA14 = 10, nbA50 = 0, nbA100 = 0, nbB50 = 0, nbB100 = 0, nbB200 = 0, nbMaxIte=3, resoudreVRPwithHeuristic=true)
+function evaluatePDI_heuristique(nbA14 = 10, nbA50 = 5, nbA100 = 2, nbB50 = 0, nbB100 = 0, nbB200 = 0, nbMaxIte=100, resoudreVRPwithHeuristic=false)
     allInstances = getSelectedInstances(nbA14, nbA50, nbA100, nbB50, nbB100, nbB200)
     for instances in allInstances
         callPDIHeuristic(instances,nbMaxIte, resoudreVRPwithHeuristic)
