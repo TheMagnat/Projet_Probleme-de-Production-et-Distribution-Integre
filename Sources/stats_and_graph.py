@@ -249,14 +249,14 @@ def getStatsPDI():
     EcartTypeTempsExecExact=np.std(tempsExact)
     EcartTypeTempsExecHeuristic=np.std(tempsHeuristique)
     EcartTypeTempsExecVRP=np.std(tempsVRP)
-    EcartType_objective_valueExact=np.mean(objective_valueExact)
-    EcartType_objective_valueHeuristique=np.mean(objective_valueHeuristique)
-    EcartType_objective_valueVRP=np.mean(objective_valueVRP)
+    EcartType_objective_valueExact=np.std(objective_valueExact)
+    EcartType_objective_valueHeuristique=np.std(objective_valueHeuristique)
+    EcartType_objective_valueVRP=np.std(objective_valueVRP)
 
     #nbOptimal
-    nbOptimalExact=np.sum(isOptimal_Exact)
-    nbOptimalHeuristique=np.sum(isOptimal_Heuristique)
-    nbOptimalVRP=np.sum(isOptimal_VRP)
+    nbOptimalExact=np.sum(isOptimal_Exact)/len(isOptimal_Exact)
+    nbOptimalHeuristique=np.sum(isOptimal_Heuristique)/len(isOptimal_Heuristique)
+    nbOptimalVRP=np.sum(isOptimal_VRP)/len(isOptimal_VRP)
 
     #circuits
     allCircuits_Exact=[] #liste des circuits, pour tous les benchmarks, pour tous les pas de temps
@@ -314,6 +314,7 @@ def getStatsVRP(size=14):
     mean_timeVRP=np.mean(allTimeVRP)
     stdClarkWrigth=np.std(allTimeClarkWrigth)
     stdVRP=np.std(allTimeVRP)
+
     return ("mean_circuit_size_ClarkWrigth",mean_circuit_size_ClarkWrigth),("mean_circuit_size_VRP",mean_circuit_size_VRP),("std_circuit_size_ClarkWrigth",std_circuit_size_ClarkWrigth),("std_circuit_size_VRP",std_circuit_size_VRP),("mean_timeClarkWrigth",mean_timeClarkWrigth),("mean_timeVRP",mean_timeVRP),("stdClarkWrigth",stdClarkWrigth),("stdVRP",stdVRP)
 
 #print(getStatsPDI())
