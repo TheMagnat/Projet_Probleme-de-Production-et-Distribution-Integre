@@ -1,0 +1,7 @@
+t	realisable	time	circuit
+1	true	2 milliseconds	[[0, 14, 1, 5, 2, 13, 8, 4, 12, 6, 9, 11, 3, 10, 7]]
+2	true	1 millisecond	[[0, 14, 1, 5, 2, 13, 8, 4, 12, 6, 9, 11, 3, 10, 7]]
+3	true	1 millisecond	[[0, 14, 1, 5, 2, 13, 8, 4, 12, 6, 9, 11, 3, 10, 7]]
+4	true	1 millisecond	[[0, 14, 1, 5, 2, 13, 8, 4, 12, 6, 9, 11, 3, 10, 7]]
+5	true	1 millisecond	[[0, 14, 1, 5, 2, 13, 8, 4, 12, 6, 9, 11, 3, 10, 7]]
+6	true	1 millisecond	[[0, 14, 1, 5, 2, 13, 8, 4, 12, 6, 9, 11, 3, 10, 7]]

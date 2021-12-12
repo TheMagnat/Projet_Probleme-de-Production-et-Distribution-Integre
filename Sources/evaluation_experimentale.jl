@@ -135,13 +135,15 @@ function callVRPHeuristic_and_Exact(instances)
         file_heuristique = open(dir_name *"/circuits_de_clarkWright$(name).txt", "w")
         file_VRP = open(dir_name *"/circuits_de_VRP$(name).txt", "w")
         file_model=open(dir_name *"/all_models_de_VRP$(name).txt", "w")
-	    write(file_heuristique, "t\trealisable\tcircuit\n")
-        write(file_VRP, "t\trealisable\tcircuit\n")
+	    write(file_heuristique, "t\trealisable\ttime\tcircuit\n")
+        write(file_VRP, "t\trealisable\ttime\tcircuit\n")
 
         #get the circuits from metaheuristic and VRP for all time steps and save the model for all time steps
         for t in 1:params["l"]
             #save the heuristic's circuit
+            start=now()
             circuits_temps_t_heuristique = mixMetaheuristic(clark_wright(params, nodes, demands, costs,t),params,costs)
+            elapsed=now()-start
             isRealisable=true
             for circuit in circuits_temps_t_heuristique
                 isRealisable=isRealisable&&length(circuit)<=params["k"]
@@ -149,14 +151,14 @@ function callVRPHeuristic_and_Exact(instances)
                     break
                 end
             end
-            write(file_heuristique, "$t\t$isRealisable\t$(circuits_temps_t_heuristique)\n")
+            write(file_heuristique, "$t\t$isRealisable\t$elapsed\t$(circuits_temps_t_heuristique)\n")
 
             #save the VRP's circuits
             model = createVRP_MTZ(params, nodes, demands, costs, t)
             optimize!(model)
             circuits_temps_t_VRP =vrpToCircuit(model, params, false, t)
             isRealisabl_VRPe=length(circuits_temps_t_VRP)<=params["k"]
-            write(file_VRP, "$t\t$isRealisabl_VRPe\t$(circuits_temps_t_VRP)\n")
+            write(file_VRP, "$t\t$isRealisabl_VRPe\t$(_try_get(solve_time, model))\t$(circuits_temps_t_VRP)\n")
             
             #save the model
             towrite=["solver_name",solver_name(model),"\ntermination_status :",
@@ -253,7 +255,7 @@ function evaluatePDI_BranchAndCut(nbA14 = 30, nbA50 = 30, nbA100 = 10, nbB50 = 0
     end
 end
 
-function evaluateVRP_Heuristique_and_Exact(nbA14 = 10, nbA50 = 2, nbA100 = 0, nbB50 = 0, nbB100 = 0, nbB200 = 0)
+function evaluateVRP_Heuristique_and_Exact(nbA14 = 0, nbA50 = 1, nbA100 = 0, nbB50 = 0, nbB100 = 0, nbB200 = 0)
     allInstances = getSelectedInstances(nbA14, nbA50, nbA100, nbB50, nbB100, nbB200)
     for instances in allInstances
         callVRPHeuristic_and_Exact(instances)
@@ -271,8 +273,10 @@ end
 
 
 #evaluatePDI_BranchAndCut(20,0,0,0,0,0)
-#evaluateVRP_Heuristique_and_Exact()
-evaluatePDI_heuristique()
+evaluateVRP_Heuristique_and_Exact()
+#evaluatePDI_heuristique()
+
+
 #= TODO : 
 1 - Comparer en terme de vitesse et en fitness sur des instances de tailles différentes: 
     - la résolution de VRP avec
