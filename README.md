@@ -1,5 +1,7 @@
 # Projet_Probleme-de-Production-et-Distribution-Integre
-Projet pour la matière MAOA (Modèles et Applications en Ordonnancement et optimisation combinAtoire) sur le theme du Problème de Production et Distribution Intégré (PDI)
+Projet pour la matière MAOA (Modèles et Applications en Ordonnancement et optimisation combinAtoire) sur le theme du Problème de Production et Distribution Intégré (PDI).
+
+Binome : David PINAUD @ Guillaume MAGNIADAS
 
 
 ## Dépendances
@@ -9,3 +11,6 @@ Projet pour la matière MAOA (Modèles et Applications en Ordonnancement et opti
 - OffsetArrays
 - JuMP
 - GLPK
+- CPLEX
+- Python
+- Numpy

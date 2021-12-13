@@ -173,13 +173,15 @@ function update_LSP(lsp_model,SC,fonctionObjInitial,params)
 end
 
 function PDI_heuristique(lsp_model, params, nodes, demands, costs, SC , fonctionObjInitial, nbMaxIte=10, resoudreVRPwithHeuristic=true)
-    for _ in 1:nbMaxIte
+    circuits=Dict()
+    for ite in 1:nbMaxIte
         #résolution LSP
         println("============================================================================SOLVING============================================================================")
         println("============================================================================SOLVING============================================================================")
         println("============================================================================SOLVING============================================================================")
         println("============================================================================SOLVING============================================================================\n\n\n")
-        lsp_model=resolvePlne(lsp_model,2,"")
+        #lsp_model=resolvePlne(lsp_model,2,"")
+        optimize!(lsp_model)
 
         #récuperer les VRP pour chaque pas de temps
         vrp_models_et_parametres_en_fonction_du_pasDeTemps=getVRPfromLSP(lsp_model,params, nodes, demands, costs)
@@ -214,12 +216,15 @@ function PDI_heuristique(lsp_model, params, nodes, demands, costs, SC , fonction
             if(empty!(vrp_circuits)==false)
                 SC=getSCfromVRPCircuits(vrp_circuits, SC, pasDeTemps, params, costs)
             end
+            circuits[pasDeTemps]=vrp_circuits
         end
         
         #mettre à jour les SC dans le modèle du LSP
-        update_LSP(lsp_model,SC,fonctionObjInitial,params)
+        if(ite<nbMaxIte)
+            update_LSP(lsp_model,SC,fonctionObjInitial,params)
+        end
         
     end
-    return lsp_model
+    return lsp_model,circuits
 end
 
