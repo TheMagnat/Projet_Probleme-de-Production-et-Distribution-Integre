@@ -15,8 +15,8 @@ include("allFiles.jl")
 
 #Instances A
 
-#INSTANCE_PATH = "../PRP_instances/A_014_#ABS1_15_1.prp"
-INSTANCE_PATH = "../PRP_instances/A_050_ABS12_50_3.prp"
+INSTANCE_PATH = "../PRP_instances/A_014_#ABS1_15_1.prp"
+#INSTANCE_PATH = "../PRP_instances/A_050_ABS12_50_3.prp"
 #INSTANCE_PATH = "../PRP_instances/A_050_ABS14_50_1.prp"
 #INSTANCE_PATH = "../PRP_instances/A_100_ABS5_100_4.prp"
 
@@ -77,10 +77,10 @@ function testPDI_Bard_Nananukul(solve=false, verbose=1)
 
 end
 
-function testPDI_heuristique(resoudreVRPwithHeuristic=true,nbMaxIte=10)
+function testPDI_heuristique(resoudreVRPwithHeuristic=true, nbMaxIte=10)
 
 	lsp_model, params, nodes, demands, costs, SC, fonctionObjInitial=initialisation_PDI_heuristique(INSTANCE_PATH)
-	lsp_model=PDI_heuristique(lsp_model, params, nodes, demands, costs, SC, fonctionObjInitial, nbMaxIte, resoudreVRPwithHeuristic)
+	lsp_model, circuits = PDI_heuristique(lsp_model, params, nodes, demands, costs, SC, fonctionObjInitial, nbMaxIte, resoudreVRPwithHeuristic)
 
 end
 
@@ -213,6 +213,47 @@ function testBranchAndCutPDI(filePath)
 
 end
 
+
+function testCompareExact(logPath)
+
+
+	open(logPath, "a") do io
+
+		t = 1
+
+		path_to_file = "../PRP_instances/"
+
+		for file in allFiles
+
+			params, nodes, demands, costs = readPRP(INSTANCE_PATH)
+
+			model, totalExactTime = @timed BranchAndCutPDI(params, nodes, demands, costs)
+
+			exactValue = objective_value(model)
+
+			
+
+			resoudreVRPwithHeuristic=true
+			nbMaxIte=10
+
+			lsp_model, params, nodes, demands, costs, SC, fonctionObjInitial=initialisation_PDI_heuristique(INSTANCE_PATH)
+			(lsp_model, circuits), totalTimeHeuristic = @timed PDI_heuristique(lsp_model, params, nodes, demands, costs, SC, fonctionObjInitial, nbMaxIte, resoudreVRPwithHeuristic)
+
+			heuristicValue = objective_value(lsp_model)
+
+			println("Exacte: ", exactValue)
+			println("Heuristique: ", heuristicValue)
+
+			println(io,"$file,$(exactValue),$(totalExactTime),$(heuristicValue),$(totalTimeHeuristic)")
+
+		end #Loop file
+
+	end #Open
+
+end
+
+
+
 function testLogCompareHeuristic(logPath; heuristicExtraParam=[30])
 	allHeuristic = [[binPacking, "Bin packing"], [clark_wright, "Clark-Wright"], [sectorielle, "Sectorielle"]]
 	allMetaheuristic = [[TSPBoost, "TSP Local search"], [mixMetaheuristic, "Mix Metaheuristic"]]
@@ -311,13 +352,15 @@ function testLogCompareMTZ_Heuristic(logPath)
 	end #Open
 end
 
+testCompareExact("pdiCompare.csv")
+
 #testLogCompareHeuristic("metaheuristic.csv", heuristicExtraParam=[10])
 
-testLogCompareMTZ_Heuristic("mtz_meta.csv")
+#testLogCompareMTZ_Heuristic("mtz_meta.csv")
 
 #Nouvelle fonction qui réunis toutes les heuristique, le MTZ et le LSP
 
-#testHeuristicVRP(t=3, choice=3, metaChoice=2, showCircuits=false, useLSP=false, heuristicExtraParam=[10], showMTZ=0, savePath="../Save/test.png")
+#testHeuristicVRP(t=3, choice=2, metaChoice=1, showCircuits=false, useLSP=false, heuristicExtraParam=[10], showMTZ=0, savePath="../Save/test.png")
 
 #testHeuristicVRP(t=4, choice=2, metaChoice=1, showCircuits=false, useLSP=true, heuristicExtraParam=[10], showMTZ=0, savePath="../Save/test.png")
 

@@ -32,8 +32,8 @@ def readMetaCSV():
 		print(key)
 		print( np.round( values.mean(axis=0) ) )
 
-		#zeroVersion = values[:, 0:3] - values[:, 0:3].min(axis=1).reshape(-1, 1)
-		zeroVersion = values - values.min(axis=1).reshape(-1, 1)
+		zeroVersion = values[:, 0:3] - values[:, 0:3].min(axis=1).reshape(-1, 1)
+		#zeroVersion = values - values.min(axis=1).reshape(-1, 1)
 		unique, counts = np.unique(np.argwhere(zeroVersion == 0)[:, 1], return_counts=True)
 		occur = dict(zip(unique, np.round(counts/values.shape[0], 3)))
 		print(occur)
@@ -71,13 +71,42 @@ def readMTZCSV():
 		print( np.round( values.std(axis=0), 5 ) )
 		print (((values[:, 2] - values[:, 0])).argmax())
 
-		#zeroVersion = values[:, 0:3] - values[:, 0:3].min(axis=1).reshape(-1, 1)
-		#zeroVersion = values - values.min(axis=1).reshape(-1, 1)
-		#unique, counts = np.unique(np.argwhere(zeroVersion == 0)[:, 1], return_counts=True)
-		#occur = dict(zip(unique, np.round(counts/values.shape[0], 3)))
-		#print(occur)
+def readPDICSV():
+	data = pd.read_csv("../Sources/pdiCompare.csv")
+
+	nToArr = {}
+
+	for index, row in data.iterrows():
+
+		name = row.iloc[0]
+
+		n = int(name[2:5])
+
+		if n not in nToArr:
+			nToArr[n] = []
+
+		rez = [0] * 4
+
+		for j, elem in enumerate(row.iloc[1:]):
+	 		rez[j] = elem
+
+		nToArr[n].append(rez)
+
+
+	for (key, value) in nToArr.items():
+
+		values = np.array(value)
+
+		print(key)
+		print( np.round( values.mean(axis=0), 5 ) )
+		print( np.round( values.max(axis=0), 5 ) )
+		print( np.round( values.std(axis=0), 5 ) )
+		print (((values[:, 2] - values[:, 0])/values[:, 0]).max())
+
+
 
 #readMTZCSV()
-readMetaCSV()
+#readMetaCSV()
+#readPDICSV()
 
 
