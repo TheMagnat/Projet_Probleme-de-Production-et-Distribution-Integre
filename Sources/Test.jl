@@ -11,13 +11,15 @@ include("PDI_heuristic_resolution.jl")
 include("GraphHelper.jl")
 
 include("BranchAndCut.jl")
+include("allFiles.jl")
 
 #Instances A
-#INSTANCE_PATH = "./PRP_instances/A_014_#ABS1_15_1.prp"
-#INSTANCE_PATH = "./PRP_instances/A_050_ABS14_50_1.prp"
-#INSTANCE_PATH = "./PRP_instances/A_100_ABS5_100_4.prp"
+#INSTANCE_PATH = "../PRP_instances/A_014_#ABS1_15_1.prp"
+INSTANCE_PATH = "../PRP_instances/A_050_ABS12_50_3.prp"
+#INSTANCE_PATH = "../PRP_instances/A_050_ABS14_50_1.prp"
+#INSTANCE_PATH = "../PRP_instances/A_100_ABS5_100_4.prp"
 
-INSTANCE_PATH = "/Users/davidpinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp"
+#INSTANCE_PATH = "/Users/davidpinaud/Desktop/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_014_ABS1_15_1.prp"
 #INSTANCE_PATH="/Users/davidpinaud/GitHub/Projet_Probleme-de-Production-et-Distribution-Integre/PRP_instances/A_050_ABS14_50_1.prp"
 
 #Instances B
@@ -180,6 +182,7 @@ function testHeuristicVRP(;t=1, choice=1, metaChoice=0, showCircuits=false, useL
 	end
 
 end
+
 function testPDI_Boudia(solve=false, verbose=1)
 
 	params, nodes, demands, costs = readPRP(INSTANCE_PATH)
@@ -190,6 +193,7 @@ function testPDI_Boudia(solve=false, verbose=1)
 	end
 
 end
+
 #testGenerateGraph()
 #testLSP(true)
 #testVRP_MTZ(true)
@@ -208,9 +212,111 @@ function testBranchAndCutPDI(filePath)
 
 end
 
+function testLogCompareHeuristic(logPath; heuristicExtraParam=[30])
+	allHeuristic = [[binPacking, "Bin packing"], [clark_wright, "Clark-Wright"], [sectorielle, "Sectorielle"]]
+	allMetaheuristic = [[TSPBoost, "TSP Local search"], [mixMetaheuristic, "Mix Metaheuristic"]]
+
+	
+
+	# modelVRP = createVRP_MTZ(params, nodes, demands, costs, t)
+	# resolvePlne(modelVRP, 0)
+
+	# objective_value(modelVRP)
+
+	open(logPath, "a") do io
+
+		t = 1
+
+		path_to_file = "../PRP_instances/"
+
+		for file in allFiles
+
+			params, nodes, demands, costs = readPRP(path_to_file*file)
+
+			rez = Vector{Float64}(undef, length(allHeuristic) * length(allMetaheuristic))
+
+			for (i, heuristic) in enumerate(allHeuristic)
+
+				heuristicExtraParamCurrent = heuristicExtraParam
+
+				if i < 3
+					heuristicExtraParamCurrent = []
+				end
+				circuits = heuristic[1](params, nodes, demands, costs, t, heuristicExtraParamCurrent...)
+			
+				for (j, metaheuristic) in enumerate(allMetaheuristic)
+
+					circuits = metaheuristic[1](circuits, params, costs)
+					totalCost = getCircuitsCost(circuits, costs)
+
+					#println(heuristic[2], " ", metaheuristic[2], " = ", totalCost)
+					rez[i + length(allHeuristic) * (j - 1)] = totalCost
+
+				end
+
+			end
+
+			println(io,"$file,$(rez[1]),$(rez[2]),$(rez[3]),$(rez[4]),$(rez[5]),$(rez[6])")
+
+		end #Loop file
+
+	end #Open
+end
+
+
+function testLogCompareMTZ_Heuristic(logPath)
+
+	heuristic = clark_wright
+	metaheuristic = mixMetaheuristic
+
+
+	# modelVRP = createVRP_MTZ(params, nodes, demands, costs, t)
+	# resolvePlne(modelVRP, 0)
+
+	# objective_value(modelVRP)
+
+	open(logPath, "a") do io
+
+		t = 1
+
+		path_to_file = "../PRP_instances/"
+
+		for file in allFiles
+
+			params, nodes, demands, costs = readPRP(path_to_file*file)
+
+
+			modelVRP = createVRP_MTZ(params, nodes, demands, costs, t)
+			modelVRP, totalMTZtime = @timed resolvePlne(modelVRP, 0)
+
+			mtzVal = objective_value(modelVRP)
+
+
+			
+			totalTimeHeuristic = 0
+
+			circuits, elapsedTime = @timed heuristic(params, nodes, demands, costs, t)
+			totalTimeHeuristic += elapsedTime
+
+			circuits, elapsedTime = @timed metaheuristic(circuits, params, costs)
+			totalTimeHeuristic += elapsedTime
+
+			totalCost = getCircuitsCost(circuits, costs)
+
+			println(io,"$file,$(mtzVal),$(totalMTZtime),$(totalCost),$(totalTimeHeuristic)")
+
+		end #Loop file
+
+	end #Open
+end
+
+#testLogCompareHeuristic("metaheuristic.csv", heuristicExtraParam=[10])
+
+testLogCompareMTZ_Heuristic("mtz_meta.csv")
+
 #Nouvelle fonction qui réunis toutes les heuristique, le MTZ et le LSP
 
-#testHeuristicVRP(t=2, choice=3, metaChoice=2, showCircuits=false, useLSP=false, heuristicExtraParam=[30], showMTZ=0, savePath="../Save/test.png")
+#testHeuristicVRP(t=3, choice=3, metaChoice=2, showCircuits=false, useLSP=false, heuristicExtraParam=[10], showMTZ=0, savePath="../Save/test.png")
 
 #testHeuristicVRP(t=4, choice=2, metaChoice=1, showCircuits=false, useLSP=true, heuristicExtraParam=[10], showMTZ=0, savePath="../Save/test.png")
 

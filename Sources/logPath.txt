@@ -1,0 +1,1 @@
+file,MTZ,Bin packing,Clark-Wright,Sectorielle,Clark-Wright + TSP Local Search,Clark-Wright + MetaheuristicA_014_#ABS1_15_1.prp,1589.0,1920.0,1589.0,1589.0,1920.0,1589.0
