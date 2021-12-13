@@ -320,13 +320,3 @@ def getStatsVRP(size=14):
 #print(getStatsPDI())
 print(getStatsVRP(size=14))
 
-# 1 - Comparer en terme de vitesse et en fitness sur des instances de tailles différentes: 
-#     - la résolution de VRP avec
-#         - la formulation MTZ 
-#         - les différentes métaheuristiques
-# 2 - Analyser les performances du LSP en terme de vitesse et en fitness sur des instances de tailles différentes
-# 3 - Comparer en terme de vitesse et en fitness sur des instances de tailles différentes:
-#     -  PDI avec la résolution
-#         - heuristique
-#         -  exacte
-
